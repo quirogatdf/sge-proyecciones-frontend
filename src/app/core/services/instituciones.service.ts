@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Institucion } from '../../schemas/institucion.schema';
+import { environment } from '../../../environments/environment';
 
 // Re-exportar el tipo para que las páginas puedan importarlo del servicio
 export type { Institucion };
@@ -16,14 +17,18 @@ export interface InstitucionResponse {
 })
 export class InstitucionesService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8000/api/instituciones';
+  private readonly baseUrl = `${environment.apiUrl}/api`;
+
+  private getApiUrl(endpoint: string): string {
+    return `${this.baseUrl}/${endpoint}`;
+  }
 
   getAll(): Observable<InstitucionResponse> {
-    return this.http.get<InstitucionResponse>(this.apiUrl);
+    return this.http.get<InstitucionResponse>(this.getApiUrl('instituciones'));
   }
 
   getById(id: number): Observable<InstitucionResponse> {
-    return this.http.get<InstitucionResponse>(`${this.apiUrl}/${id}`);
+    return this.http.get<InstitucionResponse>(`${this.getApiUrl('instituciones')}/${id}`);
   }
 
   create(data: { 
@@ -33,7 +38,7 @@ export class InstitucionesService {
     cuise?: string | null;
     anexo?: string | null 
   }): Observable<InstitucionResponse> {
-    return this.http.post<InstitucionResponse>(this.apiUrl, data);
+    return this.http.post<InstitucionResponse>(this.getApiUrl('instituciones'), data);
   }
 
   update(id: number, data: { 
@@ -43,10 +48,10 @@ export class InstitucionesService {
     cuise?: string | null;
     anexo?: string | null 
   }): Observable<InstitucionResponse> {
-    return this.http.put<InstitucionResponse>(`${this.apiUrl}/${id}`, data);
+    return this.http.put<InstitucionResponse>(`${this.getApiUrl('instituciones')}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.getApiUrl('instituciones')}/${id}`);
   }
 }
