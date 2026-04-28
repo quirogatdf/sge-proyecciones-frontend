@@ -1,4 +1,4 @@
 export const environment = {
-  production: true,
-  apiUrl: 'sge-proyecciones-backend.up.railway.app',
+  production: false,
+  apiUrl: 'http://localhost:8000', // Tu API local
 };
