@@ -1,3 +1,39 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import 'tailwindcss';
+
+@theme {
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  /* Base */
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.145 0 0);
+  --surface: oklch(0.97 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.95 0 0);
+  --border: oklch(0.922 0 0);
+  --radius: 0.625rem;
+
+  /* Primary - Azul */
+  --primary: oklch(0.3 0.15 230);
+  --primary-foreground: oklch(0.985 0 0);
+
+  /* Secondary - Gris oscuro */
+  --secondary: oklch(0.45 0.05 230);
+  --secondary-foreground: oklch(0.985 0 0);
+
+  /* Success - Verde */
+  --success: oklch(0.4 0.15 150);
+  --success-foreground: oklch(0.985 0 0);
+
+  /* Warning - Amarillo/Naranja */
+  --warning: oklch(0.55 0.2 45);
+  --warning-foreground: oklch(0.145 0 0);
+
+  /* Destructive - Rojo */
+  --destructive: oklch(0.4 0.15 25);
+  --destructive-foreground: oklch(0.985 0 0);
+}
