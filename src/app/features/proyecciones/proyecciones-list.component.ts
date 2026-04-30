@@ -600,11 +600,21 @@ export class ProyeccionesListComponent implements OnInit {
     }
   }
 
+  private formatDateForInput(date: string | null | undefined): string {
+    if (!date) return '';
+    // Si ya está en formato YYYY-MM-DD, devolverlo tal cual
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+    // Si no, convertir del formato ISO al formato esperado por input[type=date]
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  }
+
   onModalOpened(item: Proyeccion | null) {
     this.submitted.set(false);
     this.formErrors.set({});
     this.editingId.set(item?.id || null);
-    
+
     if (item) {
       // Editando - cargar todos los campos
       this.formData = {
@@ -614,8 +624,8 @@ export class ProyeccionesListComponent implements OnInit {
         motivo: item.motivo || '',
         n_expediente: item.n_expediente || '',
         orden: item.orden || null,
-        fecha_desde: item.fecha_desde || '',
-        fecha_hasta: item.fecha_hasta || '',
+        fecha_desde: this.formatDateForInput(item.fecha_desde),
+        fecha_hasta: this.formatDateForInput(item.fecha_hasta),
         horar: item.horar || null,
         cargos: item.cargos || null,
         id_cargo: item.id_cargo || null,
