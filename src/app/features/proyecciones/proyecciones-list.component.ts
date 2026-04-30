@@ -31,7 +31,7 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
             (ngModelChange)="onNivelFilterChange($event)"
             class="filter-select"
           >
-            <option [value]="null">Todos los niveles</option>
+            <option [ngValue]="null">Todos los niveles</option>
             @for (nivel of niveles(); track nivel.id) {
               <option [value]="nivel.id">{{ nivel.nombre }}</option>
             }
