@@ -25,9 +25,9 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
       <div class="filters">
         <div class="filter-group">
           <label for="nivelFiltro">Filtrar por nivel:</label>
-          <select 
+          <select
             id="nivelFiltro"
-            [ngModel]="selectedNivelId"
+            [ngModel]="selectedNivelId()"
             (ngModelChange)="onNivelFilterChange($event)"
             class="filter-select"
           >
