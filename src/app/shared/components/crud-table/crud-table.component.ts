@@ -1,29 +1,42 @@
-import { 
-  Component, 
-  inject, 
-  signal, 
-  computed, 
-  OnInit, 
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  OnInit,
   ChangeDetectionStrategy,
   Input,
   Output,
-  EventEmitter
+  EventEmitter,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { 
-  ColumnConfig, 
-  CrudService, 
-  CrudTableConfig 
-} from '../../interfaces/crud-config.interface';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ColumnConfig, CrudService, CrudTableConfig } from '../../interfaces/crud-config.interface';
 import { AlertService } from '../../../core/services/alert.service';
-import { LucidePlus, LucidePencil, LucideTrash2, LucideX } from '@lucide/angular';
+import {
+  LucidePlus,
+  LucidePencil,
+  LucideTrash2,
+  LucideX,
+  LucideAArrowUp,
+  LucideAArrowDown,
+} from '@lucide/angular';
 
 @Component({
   selector: 'app-crud-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, LucidePlus, LucidePencil, LucideTrash2, LucideX],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LucidePlus,
+    LucidePencil,
+    LucideTrash2,
+    LucideX,
+    LucideAArrowUp,
+    LucideAArrowDown,
+  ],
   template: `
     <div class="page">
       <header class="page-header">
@@ -37,8 +50,8 @@ import { LucidePlus, LucidePencil, LucideTrash2, LucideX } from '@lucide/angular
       <div class="table-container">
         <!-- Buscador -->
         <div class="search-box">
-          <input 
-            type="text" 
+          <input
+            type="text"
             [placeholder]="config.searchPlaceholder || 'Buscar...'"
             [ngModel]="searchTerm()"
             (ngModelChange)="onSearch($event)"
@@ -50,14 +63,20 @@ import { LucidePlus, LucidePencil, LucideTrash2, LucideX } from '@lucide/angular
           <thead>
             <tr>
               @for (col of config.columns; track col.key) {
-                <th 
+                <th
                   [class.sortable]="col.sortable !== false"
                   (click)="col.sortable !== false && onSort(col.key)"
                 >
-                  {{ col.label }} 
-                  @if (col.sortable !== false) {
-                    {{ getSortIcon(col.key) }}
-                  }
+                  <span class="th-content flex flex-row items-center gap-1">
+                    @if (col.sortable !== false && sortBy() === col.key) {
+                      @if (sortDirection() === 'asc') {
+                        <svg lucideAArrowDown class="sort-icon" [size]="18"></svg>
+                      } @else {
+                        <svg lucideAArrowUp class="sort-icon" [size]="18"></svg>
+                      }
+                    }
+                    {{ col.label }}
+                  </span>
                 </th>
               }
               <th>Acciones</th>
@@ -67,7 +86,13 @@ import { LucidePlus, LucidePencil, LucideTrash2, LucideX } from '@lucide/angular
             @for (item of paginatedItems(); track item['id']) {
               <tr>
                 @for (col of config.columns; track col.key) {
-                  <td>{{ getCellValue(item, col) }}</td>
+                  <td>
+                    @if (col.render) {
+                      <div [innerHTML]="getCellHtml(item, col)"></div>
+                    } @else {
+                      {{ getCellValue(item, col) }}
+                    }
+                  </td>
                 }
                 <td class="actions">
                   <button class="btn-icon" (click)="openModal(item)">
@@ -91,20 +116,18 @@ import { LucidePlus, LucidePencil, LucideTrash2, LucideX } from '@lucide/angular
         <!-- Paginación -->
         @if (totalPages() > 1) {
           <div class="pagination">
-            <button 
-              class="btn-page" 
+            <button
+              class="btn-page"
               (click)="onPageChange(currentPage() - 1)"
               [disabled]="currentPage() === 1"
             >
               Anterior
             </button>
-            
-            <span class="page-info">
-              Página {{ currentPage() }} de {{ totalPages() }}
-            </span>
-            
-            <button 
-              class="btn-page" 
+
+            <span class="page-info"> Página {{ currentPage() }} de {{ totalPages() }} </span>
+
+            <button
+              class="btn-page"
               (click)="onPageChange(currentPage() + 1)"
               [disabled]="currentPage() >= totalPages()"
             >
@@ -137,232 +160,248 @@ import { LucidePlus, LucidePencil, LucideTrash2, LucideX } from '@lucide/angular
       </div>
     }
   `,
-  styles: [`
-    .page {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
+  styles: [
+    `
+      .page {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
 
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-    .page-header h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--foreground);
-      margin: 0;
-    }
+      .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin: 0;
+      }
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        line-height: 1;
+      }
 
-    .btn-primary {
-      background: var(--primary);
-      color: var(--primary-foreground);
-    }
+      .btn svg {
+        display: inline-block;
+        flex-shrink: 0;
+        vertical-align: middle;
+      }
 
-    .btn-primary:hover {
-      filter: brightness(1.1);
-    }
+      .btn-primary {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
 
-    .btn-secondary {
-      background: var(--surface);
-      color: var(--foreground);
-      border: 1px solid var(--border);
-    }
+      .btn-primary:hover {
+        filter: brightness(1.1);
+      }
 
-    .btn-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.375rem;
-      background: transparent;
-      border: none;
-      border-radius: var(--radius);
-      color: var(--muted-foreground);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+      .btn-secondary {
+        background: var(--surface);
+        color: var(--foreground);
+        border: 1px solid var(--border);
+      }
 
-    .btn-icon:hover {
-      background: var(--accent);
-      color: var(--foreground);
-    }
+      .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.375rem;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius);
+        color: var(--muted-foreground);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
 
-    .btn-icon.btn-danger:hover {
-      background: color-mix(in oklch, var(--destructive) 15%, transparent);
-      color: var(--destructive);
-    }
+      .btn-icon:hover {
+        background: var(--accent);
+        color: var(--foreground);
+      }
 
-    .table-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
+      .btn-icon.btn-danger:hover {
+        background: color-mix(in oklch, var(--destructive) 15%, transparent);
+        color: var(--destructive);
+      }
 
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+      .table-container {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
 
-    .table th,
-    .table td {
-      padding: 0.75rem 1rem;
-      text-align: start;
-    }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+      }
 
-    .table th {
-      background: var(--muted);
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--muted-foreground);
-      text-transform: uppercase;
-    }
+      .table th,
+      .table td {
+        padding: 0.75rem 1rem;
+        text-align: start;
+      }
 
-    .table td {
-      border-block-end: 1px solid var(--border);
-    }
+      .table th {
+        background: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--muted-foreground);
+        text-transform: uppercase;
+      }
 
-    .table .actions {
-      display: flex;
-      gap: 0.25rem;
-    }
+      .table td {
+        border-block-end: 1px solid var(--border);
+      }
 
-    .table .empty {
-      text-align: center;
-      color: var(--muted-foreground);
-      padding: 2rem;
-    }
+      .table .actions {
+        display: flex;
+        gap: 0.25rem;
+      }
 
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
+      .table .empty {
+        text-align: center;
+        color: var(--muted-foreground);
+        padding: 2rem;
+      }
 
-    .modal {
-      background: var(--surface);
-      border-radius: var(--radius);
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-    }
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
 
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 1.5rem;
-      border-block-end: 1px solid var(--border);
-    }
+       .modal {
+         background: var(--surface);
+         border-radius: var(--radius);
+         width: 100%;
+         max-width: 800px;
+         max-height: 90vh;
+         display: flex;
+         flex-direction: column;
+         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+       }
 
-    .modal-header h2 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin: 0;
-    }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-block-end: 1px solid var(--border);
+      }
 
-    .modal-body {
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+      .modal-header h2 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0;
+      }
 
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-      padding: 1rem 1.5rem;
-      border-block-start: 1px solid var(--border);
-    }
+       .modal-body {
+         padding: 1.5rem;
+         display: flex;
+         flex-direction: column;
+         gap: 1rem;
+         overflow-y: auto;
+         max-height: calc(90vh - 130px);
+       }
 
-    .search-box {
-      padding: 1rem;
-      border-block-end: 1px solid var(--border);
-    }
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        padding: 1rem 1.5rem;
+        border-block-start: 1px solid var(--border);
+      }
 
-    .search-input {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      background: var(--background);
-      color: var(--foreground);
-    }
+      .search-box {
+        padding: 1rem;
+        border-block-end: 1px solid var(--border);
+      }
 
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
+      .search-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        background: var(--background);
+        color: var(--foreground);
+      }
 
-    .sortable {
-      cursor: pointer;
-      user-select: none;
-      transition: color 0.2s ease;
-    }
+      .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
 
-    .sortable:hover {
-      color: var(--primary);
-    }
+      .sortable {
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.2s ease;
+      }
 
-    .pagination {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      border-block-start: 1px solid var(--border);
-    }
+      .sortable:hover {
+        color: var(--primary);
+      }
 
-    .btn-page {
-      padding: 0.375rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--surface);
-      color: var(--foreground);
-      font-size: 0.875rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-block-start: 1px solid var(--border);
+      }
 
-    .btn-page:hover:not(:disabled) {
-      background: var(--accent);
-    }
+      .btn-page {
+        padding: 0.375rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        color: var(--foreground);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
 
-    .btn-page:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+      .btn-page:hover:not(:disabled) {
+        background: var(--accent);
+      }
 
-    .page-info {
-      font-size: 0.875rem;
-      color: var(--muted-foreground);
-    }
-  `]
+      .btn-page:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .page-info {
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+      }
+    `,
+  ],
 })
 export class CrudTableComponent<T extends { id: number }> implements OnInit {
   private readonly alertService = inject(AlertService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   @Input({ required: true }) config!: CrudTableConfig<T>;
   @Input({ required: true }) service!: any;
@@ -373,7 +412,7 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   items = signal<T[]>([]);
   showModal = signal(false);
   editingItem = signal<T | null>(null);
-  
+
   searchTerm = signal('');
   currentPage = signal(1);
   sortBy = signal<keyof T | null>(null);
@@ -385,17 +424,18 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
     const search = this.searchTerm().toLowerCase();
     const items = this.items();
     if (!search) return items;
-    
-    const searchFields = this.config.searchFields || 
+
+    const searchFields =
+      this.config.searchFields ||
       this.config.columns
-        .filter(col => col.searchFields || col.sortable !== false)
-        .flatMap(col => col.searchFields || [col.key]);
-    
-    return items.filter(item => 
-      searchFields.some(field => {
+        .filter((col) => col.searchFields || col.sortable !== false)
+        .flatMap((col) => col.searchFields || [col.key]);
+
+    return items.filter((item) =>
+      searchFields.some((field) => {
         const value = item[field as keyof T];
         return value && String(value).toLowerCase().includes(search);
-      })
+      }),
     );
   });
 
@@ -403,29 +443,29 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
     const items = [...this.filteredItems()];
     const sortBy = this.sortBy();
     if (!sortBy) return items;
-    
+
     const direction = this.sortDirection();
-    
+
     items.sort((a, b) => {
       const valA = a[sortBy];
       const valB = b[sortBy];
-      
+
       let cmp = 0;
       if (typeof valA === 'number' && typeof valB === 'number') {
         cmp = valA - valB;
       } else {
-        cmp = String(valA || '').toLowerCase().localeCompare(String(valB || '').toLowerCase());
+        cmp = String(valA || '')
+          .toLowerCase()
+          .localeCompare(String(valB || '').toLowerCase());
       }
-      
+
       return direction === 'asc' ? cmp : -cmp;
     });
-    
+
     return items;
   });
 
-  totalPages = computed(() => 
-    Math.max(1, Math.ceil(this.sortedItems().length / this.pageSize()))
-  );
+  totalPages = computed(() => Math.max(1, Math.ceil(this.sortedItems().length / this.pageSize())));
 
   paginatedItems = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
@@ -442,7 +482,7 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
         const data = res.data;
         this.items.set(Array.isArray(data) ? data : [data]);
       },
-      error: (err: any) => console.error('Error cargando datos:', err)
+      error: (err: any) => console.error('Error cargando datos:', err),
     });
   }
 
@@ -497,33 +537,43 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   }
 
   deleteItem(id: number) {
-    this.alertService.confirm(
-      '¿Eliminar registro?',
-      'Esta acción no se puede deshacer',
-      'Eliminar',
-      'Cancelar'
-    ).then((result) => {
-      if (result.isConfirmed) {
-        (this.service as any).delete(id).subscribe({
-          next: () => {
-            this.loadItems();
-            this.alertService.success('Eliminado', 'El registro fue eliminado');
-          },
-          error: (err: any) => {
-            console.error('Error eliminando:', err);
-            this.alertService.error('Error', 'No se pudo eliminar el registro');
-          }
-        });
-      }
-    });
+    this.alertService
+      .confirm('¿Eliminar registro?', 'Esta acción no se puede deshacer', 'Eliminar', 'Cancelar')
+      .then((result) => {
+        if (result.isConfirmed) {
+          (this.service as any).delete(id).subscribe({
+            next: () => {
+              this.loadItems();
+              this.alertService.success('Eliminado', 'El registro fue eliminado');
+            },
+            error: (err: any) => {
+              console.error('Error eliminando:', err);
+              this.alertService.error('Error', 'No se pudo eliminar el registro');
+            },
+          });
+        }
+      });
   }
 
   getCellValue(item: T, col: ColumnConfig<T>): string {
     if (col.render) {
-      return col.render(item);
+      const result = col.render(item);
+      // Si devuelve un string con HTML, lo devolvemos tal cual
+      // El template usará getCellHtml() para renderizarlo
+      return typeof result === 'string' ? result : String(result);
     }
     const value = item[col.key];
     return value !== null && value !== undefined ? String(value) : '-';
+  }
+
+  getCellHtml(item: T, col: ColumnConfig<T>): SafeHtml | null {
+    if (col.render) {
+      const result = col.render(item);
+      if (typeof result === 'string') {
+        return this.sanitizer.bypassSecurityTrustHtml(result);
+      }
+    }
+    return null;
   }
 
   getEntityName(): string {

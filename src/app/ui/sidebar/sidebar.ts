@@ -1,6 +1,13 @@
 import { Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideLayoutGrid, LucideBuilding2, LucideBriefcase, LucideClock, LucideUserSquare } from '@lucide/angular';
+import {
+  LucideLayoutGrid,
+  LucideBuilding2,
+  LucideBriefcase,
+  LucideClock,
+  LucideUserSquare,
+  LucideFileSpreadsheet,
+} from '@lucide/angular';
 
 interface NavItem {
   label: string;
@@ -11,7 +18,16 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, LucideLayoutGrid, LucideBuilding2, LucideBriefcase, LucideClock, LucideUserSquare],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    LucideLayoutGrid,
+    LucideBuilding2,
+    LucideBriefcase,
+    LucideClock,
+    LucideUserSquare,
+    LucideFileSpreadsheet,
+  ],
   template: `
     <aside class="sidebar">
       <div class="logo">
@@ -19,6 +35,10 @@ interface NavItem {
       </div>
 
       <nav class="nav">
+        <a routerLink="/proyecciones" routerLinkActive="active" class="nav-item">
+          <svg lucideFileSpreadsheet [size]="20" class="nav-icon"></svg>
+          <span class="nav-label">Proyecciones</span>
+        </a>
         <a routerLink="/niveles" routerLinkActive="active" class="nav-item">
           <svg lucideLayoutGrid [size]="20" class="nav-icon"></svg>
           <span class="nav-label">Niveles</span>

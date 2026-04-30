@@ -18,11 +18,12 @@ import { TurnoFormSchema, type TurnoFormInput } from '../../schemas/turno.schema
   ],
   template: `
     <app-crud-table
+      #crudTable
       [config]="tableConfig"
       [service]="turnosService"
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
-      (save)="onSave()"
+      (save)="onSave(crudTable)"
     >
       <div form-content>
         <!-- El formulario SIEMPRE se muestra cuando el modal está abierto -->
@@ -166,7 +167,7 @@ export class TurnosPage {
     }
   }
 
-  onSave() {
+  onSave(crudTable: any) {
     this.submitted.set(true);
     
     const result = TurnoFormSchema.safeParse(this.formData);
@@ -197,6 +198,8 @@ export class TurnosPage {
           this.editingTurno() ? 'Turno actualizado' : 'Turno creado',
           'Los cambios se guardaron correctamente'
         );
+        crudTable.closeModal();
+        crudTable.reloadData();
       },
       error: (err) => {
         console.error('Error guardando turno:', err);

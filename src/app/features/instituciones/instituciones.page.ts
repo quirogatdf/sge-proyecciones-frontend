@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InstitucionesService, Institucion } from '../../core/services/instituciones.service';
@@ -19,11 +19,12 @@ import { InstitucionFormSchema, type InstitucionFormInput } from '../../schemas/
   ],
   template: `
     <app-crud-table
+      #crudTable
       [config]="tableConfig"
       [service]="institucionesService"
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
-      (save)="onSave()"
+      (save)="onSave(crudTable)"
     >
       <div form-content>
         <!-- CUISE -->
@@ -274,7 +275,7 @@ export class InstitucionesPage implements OnInit {
     }
   }
 
-  onSave() {
+  onSave(crudTable: any) {
     this.submitted.set(true);
     
     const result = InstitucionFormSchema.safeParse(this.formData);
@@ -305,6 +306,8 @@ export class InstitucionesPage implements OnInit {
           this.editingInstitucion() ? 'Institución actualizada' : 'Institución creada',
           'Los cambios se guardaron correctamente'
         );
+        crudTable.closeModal();
+        crudTable.reloadData();
       },
       error: (err) => {
         console.error('Error guardando institución:', err);

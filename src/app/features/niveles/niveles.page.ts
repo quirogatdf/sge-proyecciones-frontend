@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NivelesService, Nivel } from '../../core/services/niveles.service';
@@ -18,11 +18,12 @@ import { NivelFormSchema, type NivelFormInput } from '../../schemas/nivel.schema
   ],
   template: `
     <app-crud-table
+      #crudTable
       [config]="tableConfig"
       [service]="nivelesService"
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
-      (save)="onSave()"
+      (save)="onSave(crudTable)"
     >
       <div form-content>
         <!-- El formulario SIEMPRE se muestra cuando el modal está abierto -->
@@ -166,7 +167,7 @@ export class NivelesPage {
     }
   }
 
-  onSave() {
+  onSave(crudTable: any) {
     this.submitted.set(true);
     
     const result = NivelFormSchema.safeParse(this.formData);
@@ -197,6 +198,8 @@ export class NivelesPage {
           this.editingNivel() ? 'Nivel actualizado' : 'Nivel creado',
           'Los cambios se guardaron correctamente'
         );
+        crudTable.closeModal();
+        crudTable.reloadData();
       },
       error: (err) => {
         console.error('Error guardando nivel:', err);

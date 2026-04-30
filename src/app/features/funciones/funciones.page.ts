@@ -18,11 +18,12 @@ import { FuncionFormSchema, type FuncionFormInput } from '../../schemas/funcion.
   ],
   template: `
     <app-crud-table
+      #crudTable
       [config]="tableConfig"
       [service]="funcionesService"
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
-      (save)="onSave()"
+      (save)="onSave(crudTable)"
     >
       <div form-content>
         <!-- El formulario SIEMPRE se muestra cuando el modal está abierto -->
@@ -166,7 +167,7 @@ export class FuncionesPage {
     }
   }
 
-  onSave() {
+  onSave(crudTable: any) {
     this.submitted.set(true);
     
     const result = FuncionFormSchema.safeParse(this.formData);
@@ -197,6 +198,8 @@ export class FuncionesPage {
           this.editingFuncion() ? 'Función/Perfil actualizado' : 'Función/Perfil creado',
           'Los cambios se guardaron correctamente'
         );
+        crudTable.closeModal();
+        crudTable.reloadData();
       },
       error: (err) => {
         console.error('Error guardando función:', err);

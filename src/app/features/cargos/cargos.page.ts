@@ -18,11 +18,12 @@ import { CargoFormSchema, type CargoFormInput } from '../../schemas/cargo.schema
   ],
   template: `
     <app-crud-table
+      #crudTable
       [config]="tableConfig"
       [service]="cargosService"
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
-      (save)="onSave()"
+      (save)="onSave(crudTable)"
     >
       <div form-content>
         <!-- El formulario SIEMPRE se muestra cuando el modal está abierto -->
@@ -186,7 +187,7 @@ export class CargosPage {
     }
   }
 
-  onSave() {
+  onSave(crudTable: any) {
     this.submitted.set(true);
     
     const result = CargoFormSchema.safeParse(this.formData);
@@ -217,6 +218,8 @@ export class CargosPage {
           this.editingCargo() ? 'Cargo actualizado' : 'Cargo creado',
           'Los cambios se guardaron correctamente'
         );
+        crudTable.closeModal();
+        crudTable.reloadData();
       },
       error: (err) => {
         console.error('Error guardando cargo:', err);

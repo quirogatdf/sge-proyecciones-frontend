@@ -22,6 +22,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/funciones/funciones.page').then(m => m.FuncionesPage),
   },
   {
+    path: 'proyecciones',
+    loadComponent: () => import('./features/proyecciones/proyecciones-list.component').then(m => m.ProyeccionesListComponent),
+  },
+  {
+    path: 'proyecciones/:id',
+    loadComponent: () => import('./features/proyecciones/proyeccion-detail.component').then(m => m.ProyeccionDetailComponent),
+  },
+  {
     path: '',
     redirectTo: 'niveles',
     pathMatch: 'full',
