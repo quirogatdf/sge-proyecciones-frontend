@@ -442,6 +442,31 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
       color: var(--destructive);
       display: block;
     }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .status-autorizado {
+      background-color: color-mix(in oklch, var(--success, #22c55e) 15%, transparent);
+      color: var(--success, #22c55e);
+    }
+
+    .status-rechazado {
+      background-color: color-mix(in oklch, var(--destructive) 15%, transparent);
+      color: var(--destructive);
+    }
+
+    .status-pendiente {
+      background-color: color-mix(in oklch, var(--warning, #f59e0b) 15%, transparent);
+      color: var(--warning, #f59e0b);
+    }
   `]
 })
 export class ProyeccionesListComponent implements OnInit {
@@ -497,9 +522,11 @@ export class ProyeccionesListComponent implements OnInit {
         label: 'Estado', 
         sortable: true,
         render: (item: Proyeccion) => {
-          const clase = item.estado === 'Autorizado' ? 'status-autorizado' :
-                     item.estado === 'Rechazado' ? 'status-rechazado' : 'status-pendiente';
-          return `<span class="status-badge ${clase}">${item.estado}</span>`;
+          const color = item.estado === 'Autorizado' ? '#22c55e' :
+                     item.estado === 'Rechazado' ? '#ef4444' : '#f59e0b';
+          const bgColor = item.estado === 'Autorizado' ? 'rgba(34, 197, 94, 0.15)' :
+                         item.estado === 'Rechazado' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+          return `<span style="display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;text-align:center;white-space:nowrap;background-color:${bgColor};color:${color};">${item.estado}</span>`;
         }
       },
       { key: 'motivo', label: 'Motivo', sortable: true },
