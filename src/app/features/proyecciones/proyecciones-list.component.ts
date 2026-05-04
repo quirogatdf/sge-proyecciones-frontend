@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProyeccionesService, Proyeccion } from '../../core/services/proyecciones.service';
 import { NivelesService } from '../../core/services/niveles.service';
-import { CargosService } from '../../core/services/cargos.service';
+import { CargosService, Cargo } from '../../core/services/cargos.service';
 import { FuncionesService } from '../../core/services/funciones.service';
 import { TurnosService } from '../../core/services/turnos.service';
 import { InstitucionesService } from '../../core/services/instituciones.service';
@@ -454,7 +454,7 @@ export class ProyeccionesListComponent implements OnInit {
 
   saving = signal(false);
   niveles = signal<{ id: number; nombre: string }[]>([]);
-  cargos = signal<{ id: number; nombre: string }[]>([]);
+  cargos = signal<Cargo[]>([]);
   funciones = signal<{ id: number; nombre: string }[]>([]);
   turnos = signal<{ id: number; nombre: string }[]>([]);
   instituciones = signal<{ id: number; nombre: string }[]>([]);
@@ -494,7 +494,7 @@ export class ProyeccionesListComponent implements OnInit {
   );
 
   readonly cargosOptions = computed(() =>
-    this.cargos().map(c => ({ id: c.id, label: c.nombre }))
+    this.cargos().map(c => ({ id: c.id, label: `${c.codigo} - ${c.nombre}` }))
   );
 
   readonly funcionesOptions = computed(() =>
@@ -597,7 +597,8 @@ export class ProyeccionesListComponent implements OnInit {
     this.cargosService.getAll().subscribe({
       next: (res: any) => {
         const data = res.data;
-        this.cargos.set(Array.isArray(data) ? data.map((c: any) => ({ id: c.id, nombre: c.nombre })) : []);
+        // Asignar directamente como Cargo[] (no mapear para no perder codigo)
+        this.cargos.set(Array.isArray(data) ? data : [data]);
       },
       error: (err: any) => console.error('Error cargando cargos:', err)
     });
