@@ -1,4 +1,4 @@
-import { Component, inject, signal, ViewChild, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, effect, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProyeccionesService, Proyeccion } from '../../core/services/proyecciones.service';
@@ -9,35 +9,36 @@ import { TurnosService } from '../../core/services/turnos.service';
 import { InstitucionesService } from '../../core/services/instituciones.service';
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
 import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
+
+interface SelectOption {
+  id: string | number;
+  label: string;
+}
 
 @Component({
   selector: 'app-proyecciones-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, CrudTableComponent],
+  imports: [CommonModule, FormsModule, CrudTableComponent, SearchableSelectComponent],
   template: `
     <div class="page">
       <header class="page-header">
         <h1>Proyecciones</h1>
       </header>
 
-      <!-- Filtro por nivel -->
-      <div class="filters">
-        <div class="filter-group">
-          <label for="nivelFiltro">Filtrar por nivel:</label>
-          <select
-            id="nivelFiltro"
-            [ngModel]="selectedNivelId()"
-            (ngModelChange)="onNivelFilterChange($event)"
-            class="filter-select"
-          >
-            <option [ngValue]="null">Todos los niveles</option>
-            @for (nivel of niveles(); track nivel.id) {
-              <option [value]="nivel.id">{{ nivel.nombre }}</option>
-            }
-          </select>
+        <!-- Filtro por nivel -->
+        <div class="filters">
+          <div class="filter-group">
+            <label for="nivelFiltro">Filtrar por nivel:</label>
+              <app-searchable-select
+               id="nivelFiltro"
+               [options]="nivelesOptions()"
+               placeholder="Todos los niveles"
+               [(value)]="selectedNivelId"
+             />
+          </div>
         </div>
-      </div>
 
       <app-crud-table
         #crudTable
@@ -54,16 +55,12 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasFieldError('id_nivel')">
               <label for="id_nivel">Nivel *</label>
-              <select 
-                id="id_nivel" 
-                [(ngModel)]="formData.id_nivel" 
-                (change)="clearFieldError('id_nivel')"
-              >
-                <option [ngValue]="null">Seleccionar...</option>
-                @for (nivel of niveles(); track nivel.id) {
-                  <option [ngValue]="nivel.id">{{ nivel.nombre }}</option>
-                }
-              </select>
+              <app-searchable-select
+                id="id_nivel"
+                [options]="nivelesOptions()"
+                placeholder="Seleccionar nivel..."
+                [(value)]="formData.id_nivel"
+              />
               @if (getFieldErrors('id_nivel').length > 0) {
                 <div class="error-messages">
                   @for (error of getFieldErrors('id_nivel'); track error) {
@@ -75,16 +72,12 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
 
             <div class="form-group" [class.has-error]="hasFieldError('id_institucion')">
               <label for="id_institucion">Institución *</label>
-              <select 
-                id="id_institucion" 
-                [(ngModel)]="formData.id_institucion" 
-                (change)="clearFieldError('id_institucion')"
-              >
-                <option [ngValue]="null">Seleccionar...</option>
-                @for (inst of instituciones(); track inst.id) {
-                  <option [ngValue]="inst.id">{{ inst.nombre }}</option>
-                }
-              </select>
+              <app-searchable-select
+                id="id_institucion"
+                [options]="institucionesOptions()"
+                placeholder="Seleccionar institución..."
+                [(value)]="formData.id_institucion"
+              />
               @if (getFieldErrors('id_institucion').length > 0) {
                 <div class="error-messages">
                   @for (error of getFieldErrors('id_institucion'); track error) {
@@ -98,16 +91,12 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasFieldError('estado')">
               <label for="estado">Estado *</label>
-              <select 
-                id="estado" 
-                [(ngModel)]="formData.estado" 
-                (change)="clearFieldError('estado')"
-              >
-                <option value="">Seleccionar...</option>
-                <option value="Autorizado">Autorizado</option>
-                <option value="Rechazado">Rechazado</option>
-                <option value="Pendiente">Pendiente</option>
-              </select>
+              <app-searchable-select
+                id="estado"
+                [options]="estadosOptions()"
+                placeholder="Seleccionar estado..."
+                [(value)]="formData.estado"
+              />
               @if (getFieldErrors('estado').length > 0) {
                 <div class="error-messages">
                   @for (error of getFieldErrors('estado'); track error) {
@@ -119,17 +108,12 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
 
             <div class="form-group" [class.has-error]="hasFieldError('motivo')">
               <label for="motivo">Motivo *</label>
-              <select 
-                id="motivo" 
-                [(ngModel)]="formData.motivo" 
-                (change)="clearFieldError('motivo')"
-              >
-                <option value="">Seleccionar...</option>
-                <option value="Creación">Creación</option>
-                <option value="Continuidad">Continuidad</option>
-                <option value="Baja">Baja</option>
-                <option value="Sin definir">Sin definir</option>
-              </select>
+              <app-searchable-select
+                id="motivo"
+                [options]="motivosOptions()"
+                placeholder="Seleccionar motivo..."
+                [(value)]="formData.motivo"
+              />
               @if (getFieldErrors('motivo').length > 0) {
                 <div class="error-messages">
                   @for (error of getFieldErrors('motivo'); track error) {
@@ -213,16 +197,12 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
           <div class="form-row">
             <div class="form-group">
               <label for="id_cargo">Cargo *</label>
-              <select 
-                id="id_cargo" 
-                [(ngModel)]="formData.id_cargo"
-                (change)="clearFieldError('id_cargo')"
-              >
-                <option [ngValue]="null">Seleccionar cargo...</option>
-                @for (cargo of cargos(); track cargo.id) {
-                  <option [ngValue]="cargo.id">{{ cargo.nombre }}</option>
-                }
-              </select>
+              <app-searchable-select
+                id="id_cargo"
+                [options]="cargosOptions()"
+                placeholder="Seleccionar cargo..."
+                [(value)]="formData.id_cargo"
+              />
               @if (getFieldErrors('id_cargo').length > 0) {
                 <div class="error-messages">
                   @for (error of getFieldErrors('id_cargo'); track error) {
@@ -234,16 +214,12 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
 
             <div class="form-group">
               <label for="id_funcion">Función *</label>
-              <select 
-                id="id_funcion" 
-                [(ngModel)]="formData.id_funcion"
-                (change)="clearFieldError('id_funcion')"
-              >
-                <option [ngValue]="null">Seleccionar función...</option>
-                @for (func of funciones(); track func.id) {
-                  <option [ngValue]="func.id">{{ func.nombre }}</option>
-                }
-              </select>
+              <app-searchable-select
+                id="id_funcion"
+                [options]="funcionesOptions()"
+                placeholder="Seleccionar función..."
+                [(value)]="formData.id_funcion"
+              />
               @if (getFieldErrors('id_funcion').length > 0) {
                 <div class="error-messages">
                   @for (error of getFieldErrors('id_funcion'); track error) {
@@ -255,16 +231,12 @@ import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-conf
 
             <div class="form-group">
               <label for="id_turno">Turno *</label>
-              <select 
-                id="id_turno" 
-                [(ngModel)]="formData.id_turno"
-                (change)="clearFieldError('id_turno')"
-              >
-                <option [ngValue]="null">Seleccionar turno...</option>
-                @for (turno of turnos(); track turno.id) {
-                  <option [ngValue]="turno.id">{{ turno.nombre }}</option>
-                }
-              </select>
+              <app-searchable-select
+                id="id_turno"
+                [options]="turnosOptions()"
+                placeholder="Seleccionar turno..."
+                [(value)]="formData.id_turno"
+              />
               @if (getFieldErrors('id_turno').length > 0) {
                 <div class="error-messages">
                   @for (error of getFieldErrors('id_turno'); track error) {
@@ -487,12 +459,57 @@ export class ProyeccionesListComponent implements OnInit {
   turnos = signal<{ id: number; nombre: string }[]>([]);
   instituciones = signal<{ id: number; nombre: string }[]>([]);
   selectedNivelId = signal<number | null>(null);
+
+  // Effect para filtrar automáticamente cuando cambia el nivel
+  private nivelFilterEffect = effect(() => {
+    const nivelId = this.selectedNivelId();
+    this.proyeccionesService.setNivelFiltro(nivelId);
+    if (this.crudTable) {
+      this.crudTable.reloadData();
+    }
+  });
+
+  // Opciones estáticas para selects
+  readonly estadosOptions = signal<SelectOption[]>([
+    { id: 'Autorizado', label: 'Autorizado' },
+    { id: 'Rechazado', label: 'Rechazado' },
+    { id: 'Pendiente', label: 'Pendiente' }
+  ]);
+
+  readonly motivosOptions = signal<SelectOption[]>([
+    { id: 'Creación', label: 'Creación' },
+    { id: 'Continuidad', label: 'Continuidad' },
+    { id: 'Baja', label: 'Baja' },
+    { id: 'Sin definir', label: 'Sin definir' }
+  ]);
+
+  // Opciones computadas para selects dinámicos
+  readonly nivelesOptions = computed(() => [
+    { id: null as unknown as number, label: 'Todos los niveles' },
+    ...this.niveles().map(n => ({ id: n.id, label: n.nombre }))
+  ]);
+
+  readonly institucionesOptions = computed(() =>
+    this.instituciones().map(i => ({ id: i.id, label: i.nombre }))
+  );
+
+  readonly cargosOptions = computed(() =>
+    this.cargos().map(c => ({ id: c.id, label: c.nombre }))
+  );
+
+  readonly funcionesOptions = computed(() =>
+    this.funciones().map(f => ({ id: f.id, label: f.nombre }))
+  );
+
+  readonly turnosOptions = computed(() =>
+    this.turnos().map(t => ({ id: t.id, label: t.nombre }))
+  );
   editingId = signal<number | null>(null);
 
   submitted = signal(false);
   formErrors = signal<Record<string, string[]>>({});
   
-  formData: Partial<Proyeccion> = {
+  formData: any = {
     estado: '',
     motivo: '',
     fecha_desde: '',
@@ -619,8 +636,8 @@ export class ProyeccionesListComponent implements OnInit {
     });
   }
 
-  onNivelFilterChange(nivelId: number | null) {
-    this.selectedNivelId.set(nivelId);
+  onNivelFilterChange() {
+    const nivelId = this.selectedNivelId();
     this.proyeccionesService.setNivelFiltro(nivelId);
     if (this.crudTable) {
       this.crudTable.reloadData();

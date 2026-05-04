@@ -1,12 +1,18 @@
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InstitucionesService, Institucion } from '../../core/services/instituciones.service';
 import { NivelesService, Nivel } from '../../core/services/niveles.service';
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
 import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
 import { InstitucionFormSchema, type InstitucionFormInput } from '../../schemas/institucion.schema';
+
+interface SelectOption {
+  id: string | number;
+  label: string;
+}
 
 @Component({
   selector: 'app-instituciones-page',
@@ -15,7 +21,8 @@ import { InstitucionFormSchema, type InstitucionFormInput } from '../../schemas/
   imports: [
     CommonModule,
     FormsModule,
-    CrudTableComponent
+    CrudTableComponent,
+    SearchableSelectComponent
   ],
   template: `
     <app-crud-table
@@ -68,17 +75,13 @@ import { InstitucionFormSchema, type InstitucionFormInput } from '../../schemas/
         <!-- Ciudad -->
         <div class="form-group" [class.has-error]="hasFieldError('localidad')">
           <label for="localidad">Ciudad *</label>
-          <select
+          <app-searchable-select
             id="localidad"
-            [(ngModel)]="formData.localidad"
-            (change)="clearFieldError('localidad')"
-            class="form-select"
-          >
-            <option value="">Seleccione una ciudad...</option>
-            <option value="Rio Grande">Río Grande</option>
-            <option value="Ushuaia">Ushuaia</option>
-            <option value="Tolhuin">Tolhuin</option>
-          </select>
+            [options]="localidadOptions()"
+            placeholder="Seleccione una ciudad..."
+            [(value)]="formData.localidad"
+            (valueChange)="clearFieldError('localidad')"
+          />
           @if (getFieldErrors('localidad').length > 0) {
             <div class="error-messages">
               @for (error of getFieldErrors('localidad'); track error) {
@@ -91,19 +94,12 @@ import { InstitucionFormSchema, type InstitucionFormInput } from '../../schemas/
         <!-- Nivel -->
         <div class="form-group" [class.has-error]="hasFieldError('nivel_id')">
           <label for="nivel_id">Nivel *</label>
-          <select
+          <app-searchable-select
             id="nivel_id"
-            [ngModel]="formData.nivel_id"
-            (ngModelChange)="formData.nivel_id = $event; clearFieldError('nivel_id')"
-            class="form-select"
-          >
-            <option [ngValue]="null">Seleccione un nivel...</option>
-            @for (nivel of niveles(); track nivel.id) {
-              <option [ngValue]="nivel.id">
-                {{ nivel.nombre }} ({{ nivel.sigla || 'Sin sigla' }})
-              </option>
-            }
-          </select>
+            [options]="nivelesOptions()"
+            placeholder="Seleccione un nivel..."
+            [(value)]="formData.nivel_id"
+          />
           @if (getFieldErrors('nivel_id').length > 0) {
             <div class="error-messages">
               @for (error of getFieldErrors('nivel_id'); track error) {
@@ -205,6 +201,18 @@ export class InstitucionesPage implements OnInit {
 
   niveles = signal<Nivel[]>([]);
   saving = signal(false);
+
+  // Opciones estáticas para localidad
+  readonly localidadOptions = signal<SelectOption[]>([
+    { id: 'Rio Grande', label: 'Río Grande' },
+    { id: 'Ushuaia', label: 'Ushuaia' },
+    { id: 'Tolhuin', label: 'Tolhuin' }
+  ]);
+
+  // Opciones computadas para niveles
+  readonly nivelesOptions = computed(() => 
+    this.niveles().map(n => ({ id: n.id, label: `${n.nombre} (${n.sigla || 'Sin sigla'})` }))
+  );
   editingInstitucion = signal<Institucion | null>(null);
   submitted = signal(false);
   formErrors = signal<Record<string, string[]>>({});
