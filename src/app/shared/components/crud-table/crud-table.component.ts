@@ -72,9 +72,9 @@ import {
                   <span class="th-content flex flex-row items-center gap-1">
                     @if (col.sortable !== false && sortBy() === col.key) {
                       @if (sortDirection() === 'asc') {
-                        <svg lucideAArrowDown class="sort-icon" [size]="18"></svg>
+                        <svg lucideArrowDown class="sort-icon" [size]="18"></svg>
                       } @else {
-                        <svg lucideAArrowUp class="sort-icon" [size]="18"></svg>
+                        <svg lucideArrowUp class="sort-icon" [size]="18"></svg>
                       }
                     }
                     {{ col.label }}
