@@ -20,8 +20,8 @@ import {
   LucideTrash2,
   LucideEye,
   LucideX,
-  LucideArrowUp,
-  LucideArrowDown,
+  LucideAArrowUp,
+  LucideAArrowDown,
 } from '@lucide/angular';
 
 @Component({
@@ -36,8 +36,8 @@ import {
     LucideTrash2,
     LucideEye,
     LucideX,
-    LucideArrowUp,
-    LucideArrowDown,
+    LucideAArrowUp,
+    LucideAArrowDown,
   ],
   template: `
     <div class="page">
@@ -72,9 +72,9 @@ import {
                   <span class="th-content flex flex-row items-center gap-1">
                     @if (col.sortable !== false && sortBy() === col.key) {
                       @if (sortDirection() === 'asc') {
-                        <svg lucideArrowDown class="sort-icon" [size]="18"></svg>
+                        <svg lucideAArrowDown class="sort-icon" [size]="18"></svg>
                       } @else {
-                        <svg lucideArrowUp class="sort-icon" [size]="18"></svg>
+                        <svg lucideAArrowUp class="sort-icon" [size]="18"></svg>
                       }
                     }
                     {{ col.label }}
