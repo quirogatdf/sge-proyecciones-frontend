@@ -57,4 +57,6 @@ export interface CrudTableConfig<T = Record<string, unknown>> {
   searchFields?: (keyof T & string)[];
   /** Placeholder del buscador */
   searchPlaceholder?: string;
+  /** Mostrar acción de ver detalle (default: false) */
+  showViewDetail?: boolean;
 }

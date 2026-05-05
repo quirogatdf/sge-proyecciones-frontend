@@ -97,9 +97,11 @@ import {
                   </td>
                 }
                 <td class="actions">
-                  <button class="btn-icon" (click)="onViewDetail(item['id'])">
-                    <svg lucideEye [size]="16"></svg>
-                  </button>
+                  @if (config.showViewDetail) {
+                    <button class="btn-icon" (click)="onViewDetail(item['id'])">
+                      <svg lucideEye [size]="16"></svg>
+                    </button>
+                  }
                   <button class="btn-icon" (click)="openModal(item)">
                     <svg lucidePencil [size]="16"></svg>
                   </button>

@@ -587,6 +587,7 @@ formData: any = {
     title: 'Proyecciones',
     pageSize: 25,
     searchPlaceholder: 'Buscar proyecciones...',
+    showViewDetail: true,
     columns: [
       { key: 'id', label: 'ID', sortable: true },
       { 
