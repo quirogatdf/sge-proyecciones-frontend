@@ -82,6 +82,15 @@ import { ActivatedRoute, Router } from '@angular/router';
                 <label>Orden:</label>
                 <span>{{ proyeccion()?.orden || '-' }}</span>
               </div>
+              <div class="detail-item">
+                <label>Año:</label>
+                <span>{{ proyeccion()?.['año'] || '-' }}</span>
+              </div>
+
+              <div class="detail-item">
+                <label>ID Puesto:</label>
+                <span>{{ proyeccion()?.id_puesto || '-' }}</span>
+              </div>
             </div>
           </div>
 
@@ -147,6 +156,20 @@ import { ActivatedRoute, Router } from '@angular/router';
               <div class="detail-item">
                 <label>Rectificación Disposición SGNIJ:</label>
                 <span>{{ proyeccion()?.rect_disposoco_sgnij || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Resolución Previa Continuidad:</label>
+                <span>{{ proyeccion()?.resolucion_previa_continuidad || '-' }}</span>
+              </div>
+
+              <div class="detail-item">
+                <label>Resolución Ministerial Rect. 1:</label>
+                <span>{{ proyeccion()?.resolucion_ministerial_rect1 || '-' }}</span>
+              </div>
+
+              <div class="detail-item">
+                <label>Resolución Ministerial Rect. 2:</label>
+                <span>{{ proyeccion()?.resolucion_ministerial_rect2 || '-' }}</span>
               </div>
             </div>
           </div>

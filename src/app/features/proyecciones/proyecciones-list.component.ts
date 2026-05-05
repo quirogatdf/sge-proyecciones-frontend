@@ -89,6 +89,18 @@ interface SelectOption {
           </div>
 
           <div class="form-row">
+            <div class="form-group">
+              <label for="id_puesto">ID Puesto</label>
+              <input 
+                id="id_puesto" 
+                type="text" 
+                [(ngModel)]="formData.id_puesto" 
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
             <div class="form-group" [class.has-error]="hasFieldError('estado')">
               <label for="estado">Estado *</label>
               <app-searchable-select
@@ -124,6 +136,20 @@ interface SelectOption {
             </div>
           </div>
 
+          @if (formData.motivo === 'Continuidad') {
+            <div class="form-row">
+              <div class="form-group">
+                <label for="resolucion_previa_continuidad">Resolución Previa Continuidad</label>
+                <input 
+                  id="resolucion_previa_continuidad" 
+                  type="text" 
+                  [(ngModel)]="formData.resolucion_previa_continuidad" 
+                  placeholder="Opcional"
+                />
+              </div>
+            </div>
+          }
+
           <div class="form-row">
             <div class="form-group">
               <label for="n_expediente">N° Expediente</label>
@@ -135,6 +161,17 @@ interface SelectOption {
               />
             </div>
 
+            <div class="form-group">
+              <label for="año">Año</label>
+              <input 
+                id="año" 
+                type="text" 
+                maxlength="4"
+                [(ngModel)]="formData['año']" 
+                placeholder="Opcional"
+              />
+            </div>
+ 
             <div class="form-group">
               <label for="orden">Orden</label>
               <input 
@@ -267,6 +304,28 @@ interface SelectOption {
                 id="resolucion_ministerial_ext" 
                 type="text" 
                 [(ngModel)]="formData.resolucion_ministerial_ext" 
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="resolucion_ministerial_rect1">Resolución Ministerial Rect. 1</label>
+              <input 
+                id="resolucion_ministerial_rect1" 
+                type="text" 
+                [(ngModel)]="formData.resolucion_ministerial_rect1" 
+                placeholder="Opcional"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="resolucion_ministerial_rect2">Resolución Ministerial Rect. 2</label>
+              <input 
+                id="resolucion_ministerial_rect2" 
+                type="text" 
+                [(ngModel)]="formData.resolucion_ministerial_rect2" 
                 placeholder="Opcional"
               />
             </div>
@@ -509,12 +568,17 @@ export class ProyeccionesListComponent implements OnInit {
   submitted = signal(false);
   formErrors = signal<Record<string, string[]>>({});
   
-  formData: any = {
-    estado: '',
-    motivo: '',
-    fecha_desde: '',
-    fecha_hasta: ''
-  };
+formData: any = {
+  estado: '',
+  motivo: '',
+  fecha_desde: '',
+  fecha_hasta: '',
+  id_puesto: '',
+  año: '',
+  resolucion_previa_continuidad: '',
+  resolucion_ministerial_rect1: '',
+  resolucion_ministerial_rect2: ''
+};
 
   tableConfig: CrudTableConfig<Proyeccion> = {
     title: 'Proyecciones',
@@ -535,6 +599,12 @@ export class ProyeccionesListComponent implements OnInit {
         render: (item: Proyeccion) => item.institucion?.nombre || 'N/A'
       },
       { 
+        key: 'año', 
+        label: 'Año', 
+        sortable: true,
+        render: (item: Proyeccion) => item['año'] || '-'
+      },
+      { 
         key: 'estado', 
         label: 'Estado', 
         sortable: true,
@@ -549,24 +619,10 @@ export class ProyeccionesListComponent implements OnInit {
       { key: 'motivo', label: 'Motivo', sortable: true },
       { key: 'n_expediente', label: 'N° Expediente', sortable: false },
       { 
-        key: 'fecha_desde', 
-        label: 'Fecha Desde', 
+        key: 'id_puesto', 
+        label: 'ID Puesto', 
         sortable: true,
-        render: (item: Proyeccion) => {
-          if (!item.fecha_desde) return '-';
-          const parts = item.fecha_desde.split('T')[0].split('-');
-          return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-      },
-      { 
-        key: 'fecha_hasta', 
-        label: 'Fecha Hasta', 
-        sortable: false,
-        render: (item: Proyeccion) => {
-          if (!item.fecha_hasta) return '-';
-          const parts = item.fecha_hasta.split('T')[0].split('-');
-          return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
+        render: (item: Proyeccion) => item.id_puesto || '-'
       },
     ],
     searchFields: ['id', 'motivo', 'n_expediente']
@@ -679,7 +735,12 @@ export class ProyeccionesListComponent implements OnInit {
         resolucion_ministerial: item.resolucion_ministerial || '',
         resolucion_ministerial_ext: item.resolucion_ministerial_ext || '',
         disposicion_sgnij: item.disposicion_sgnij || '',
-        rect_disposoco_sgnij: item.rect_disposoco_sgnij || ''
+        rect_disposoco_sgnij: item.rect_disposoco_sgnij || '',
+        id_puesto: item.id_puesto || '',
+        año: item['año'] || '',
+        resolucion_previa_continuidad: item.resolucion_previa_continuidad || '',
+        resolucion_ministerial_rect1: item.resolucion_ministerial_rect1 || '',
+        resolucion_ministerial_rect2: item.resolucion_ministerial_rect2 || ''
       };
     } else {
       // Nuevo - limpiar formulario
@@ -697,10 +758,15 @@ export class ProyeccionesListComponent implements OnInit {
         id_cargo: null,
         id_funcion: null,
         id_turno: null,
+        año: '',
         resolucion_ministerial: '',
         resolucion_ministerial_ext: '',
         disposicion_sgnij: '',
-        rect_disposoco_sgnij: ''
+        rect_disposoco_sgnij: '',
+        id_puesto: null,
+        resolucion_previa_continuidad: '',
+        resolucion_ministerial_rect1: '',
+        resolucion_ministerial_rect2: ''
       };
     }
   }
@@ -723,13 +789,19 @@ export class ProyeccionesListComponent implements OnInit {
 
     this.saving.set(true);
     this.formErrors.set({});
-
-    const isEditing = this.editingId() !== null;
-    const request = isEditing 
-      ? this.proyeccionesService.update(this.editingId()!, this.formData)
-      : this.proyeccionesService.create(this.formData);
-
-    request.subscribe({
+ 
+     // Limpiar formData: eliminar campos vacíos o null para evitar errores 422
+     const cleanedData = Object.fromEntries(
+       Object.entries(this.formData).filter(([_, value]) => value !== '' && value !== null)
+     );
+     console.log('Enviando cleanedData:', JSON.stringify(cleanedData, null, 2));
+     
+     const isEditing = this.editingId() !== null;
+     const request = isEditing 
+       ? this.proyeccionesService.update(this.editingId()!, cleanedData)
+       : this.proyeccionesService.create(cleanedData);
+     
+     request.subscribe({
       next: (res: any) => {
         this.saving.set(false);
         const message = isEditing ? 'Proyección actualizada exitosamente' : 'Proyección creada exitosamente';
@@ -740,9 +812,15 @@ export class ProyeccionesListComponent implements OnInit {
       error: (err: any) => {
         this.saving.set(false);
         console.error('Error guardando proyección:', err);
+        console.error('Error body:', err.error);
         
         if (err.status === 422 && err.error?.errors) {
           this.formErrors.set(err.error.errors);
+          // Mostrar alerta con el primer error
+          const firstError = Object.values(err.error.errors)[0] as string[];
+          if (firstError && firstError[0]) {
+            this.alertService.error('Error de validación', firstError[0]);
+          }
         } else {
           this.alertService.error('Error', 'No se pudo guardar la proyección');
         }

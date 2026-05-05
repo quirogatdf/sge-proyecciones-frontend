@@ -17,6 +17,11 @@ export interface Proyeccion {
   resolucion_ministerial_ext?: string | null;
   disposicion_sgnij?: string | null;
   rect_disposoco_sgnij?: string | null;
+  año?: string | null;
+  id_puesto?: string | null;
+  resolucion_previa_continuidad?: string | null;
+  resolucion_ministerial_rect1?: string | null;
+  resolucion_ministerial_rect2?: string | null;
   
   // Relationships (populated when eager loaded)
   nivel?: {
