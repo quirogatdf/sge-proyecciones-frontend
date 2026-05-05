@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, effect, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ProyeccionesService, Proyeccion } from '../../core/services/proyecciones.service';
 import { NivelesService } from '../../core/services/niveles.service';
 import { CargosService, Cargo } from '../../core/services/cargos.service';
@@ -40,13 +41,14 @@ interface SelectOption {
           </div>
         </div>
 
-      <app-crud-table
+       <app-crud-table
         #crudTable
         [config]="tableConfig"
         [service]="proyeccionesService"
         [saving]="saving"
         (modalOpened)="onModalOpened($event)"
         (save)="onSave(crudTable)"
+        (viewDetail)="onViewDetail($event)"
       >
         <div form-content>
           <!-- Información básica -->
@@ -502,6 +504,7 @@ interface SelectOption {
 })
 export class ProyeccionesListComponent implements OnInit {
   readonly proyeccionesService = inject(ProyeccionesService);
+  private readonly router = inject(Router);
   private readonly nivelesService = inject(NivelesService);
   private readonly cargosService = inject(CargosService);
   private readonly funcionesService = inject(FuncionesService);
@@ -842,5 +845,9 @@ formData: any = {
       delete newErrors[field];
       this.formErrors.set(newErrors);
     }
+  }
+
+  onViewDetail(id: number) {
+    this.router.navigate(['/proyecciones', id]);
   }
 }

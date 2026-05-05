@@ -18,9 +18,10 @@ import {
   LucidePlus,
   LucidePencil,
   LucideTrash2,
+  LucideEye,
   LucideX,
-  LucideAArrowUp,
-  LucideAArrowDown,
+  LucideArrowUp,
+  LucideArrowDown,
 } from '@lucide/angular';
 
 @Component({
@@ -33,9 +34,10 @@ import {
     LucidePlus,
     LucidePencil,
     LucideTrash2,
+    LucideEye,
     LucideX,
-    LucideAArrowUp,
-    LucideAArrowDown,
+    LucideArrowUp,
+    LucideArrowDown,
   ],
   template: `
     <div class="page">
@@ -95,6 +97,9 @@ import {
                   </td>
                 }
                 <td class="actions">
+                  <button class="btn-icon" (click)="onViewDetail(item['id'])">
+                    <svg lucideEye [size]="16"></svg>
+                  </button>
                   <button class="btn-icon" (click)="openModal(item)">
                     <svg lucidePencil [size]="16"></svg>
                   </button>
@@ -408,6 +413,7 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   @Input() saving = signal(false);
   @Output() modalOpened = new EventEmitter<T | null>();
   @Output() save = new EventEmitter<T | null>();
+  @Output() viewDetail = new EventEmitter<number>();
 
   items = signal<T[]>([]);
   showModal = signal(false);
@@ -534,6 +540,10 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
 
   onSaveClick() {
     this.save.emit(this.editingItem() as T | null);
+  }
+
+  onViewDetail(id: number) {
+    this.viewDetail.emit(id);
   }
 
   deleteItem(id: number) {
