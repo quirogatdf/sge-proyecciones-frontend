@@ -51,7 +51,7 @@ let instanceCounter = 0;
       <!-- Dropdown con posicionamiento fixed -->
       @if (isOpen()) {
         <div
-          [style.position]="'fixed'"
+          [style.position]="'absolute'"
           [style.top.px]="dropdownTop()"
           [style.left.px]="dropdownLeft()"
           [style.width.px]="dropdownWidth()"
@@ -152,14 +152,18 @@ export class SearchableSelectComponent {
     // Limpiar búsqueda para mostrar TODAS las opciones
     this.searchQuery.set('');
     
-    // Calcular posición del input
+    // Calcular posición del input relativa al wrapper (que tiene position: relative)
     const triggerEl = this.trigger()?.nativeElement;
-    if (!triggerEl) return;
+    const wrapperEl = this.wrapper()?.nativeElement;
+    if (!triggerEl || !wrapperEl) return;
     
-    const rect = triggerEl.getBoundingClientRect();
-    this.dropdownTop.set(rect.bottom + window.scrollY);
-    this.dropdownLeft.set(rect.left + window.scrollX);
-    this.dropdownWidth.set(rect.width);
+    const triggerRect = triggerEl.getBoundingClientRect();
+    const wrapperRect = wrapperEl.getBoundingClientRect();
+    
+    // Para position: absolute relativo al wrapper
+    this.dropdownTop.set(triggerRect.bottom - wrapperRect.top);
+    this.dropdownLeft.set(triggerRect.left - wrapperRect.left);
+    this.dropdownWidth.set(triggerRect.width);
     
     this.isOpen.set(true);
     
