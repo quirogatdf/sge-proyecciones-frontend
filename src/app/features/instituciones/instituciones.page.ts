@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { InstitucionesService, Institucion } from '../../core/services/instituciones.service';
 import { NivelesService, Nivel } from '../../core/services/niveles.service';
 import { AlertService } from '../../core/services/alert.service';
@@ -32,6 +33,7 @@ interface SelectOption {
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
       (save)="onSave(crudTable)"
+      (viewDetail)="onViewDetail($event)"
     >
       <div form-content>
         <!-- CUISE -->
@@ -198,6 +200,7 @@ export class InstitucionesPage implements OnInit {
   readonly institucionesService = inject(InstitucionesService);
   readonly nivelesService = inject(NivelesService);
   private readonly alertService = inject(AlertService);
+  private readonly router = inject(Router);
 
   niveles = signal<Nivel[]>([]);
   saving = signal(false);
@@ -229,6 +232,7 @@ export class InstitucionesPage implements OnInit {
     title: 'Administrar Instituciones',
     pageSize: 25,
     searchPlaceholder: 'Buscar por nombre, CUISE o anexo...',
+    showViewDetail: true,
     columns: [
       { key: 'id', label: 'ID', sortable: true },
       { key: 'cuise', label: 'CUISE', sortable: true, render: (item) => item['cuise'] || '-' },
@@ -339,5 +343,9 @@ export class InstitucionesPage implements OnInit {
       delete newErrors[field];
       this.formErrors.set(newErrors);
     }
+  }
+
+  onViewDetail(id: number) {
+    this.router.navigate(['/instituciones', id]);
   }
 }

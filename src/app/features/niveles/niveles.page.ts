@@ -1,6 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { NivelesService, Nivel } from '../../core/services/niveles.service';
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
@@ -24,6 +25,7 @@ import { NivelFormSchema, type NivelFormInput } from '../../schemas/nivel.schema
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
       (save)="onSave(crudTable)"
+      (viewDetail)="onViewDetail($event)"
     >
       <div form-content>
         <!-- El formulario SIEMPRE se muestra cuando el modal está abierto -->
@@ -125,6 +127,7 @@ import { NivelFormSchema, type NivelFormInput } from '../../schemas/nivel.schema
 export class NivelesPage {
   readonly nivelesService = inject(NivelesService);
   private readonly alertService = inject(AlertService);
+  private readonly router = inject(Router);
 
   saving = signal(false);
   editingNivel = signal<Nivel | null>(null);
@@ -141,6 +144,7 @@ export class NivelesPage {
     title: 'Administrar Niveles',
     pageSize: 25,
     searchPlaceholder: 'Buscar por nombre o sigla...',
+    showViewDetail: true,
     columns: [
       { key: 'id', label: 'ID', sortable: true },
       { key: 'nombre', label: 'Nombre', sortable: true },
@@ -223,5 +227,9 @@ export class NivelesPage {
       delete newErrors[field];
       this.formErrors.set(newErrors);
     }
+  }
+
+  onViewDetail(id: number) {
+    this.router.navigate(['/niveles', id]);
   }
 }

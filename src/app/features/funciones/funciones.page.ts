@@ -1,6 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { FuncionesService, Funcion } from '../../core/services/funciones.service';
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
@@ -24,6 +25,7 @@ import { FuncionFormSchema, type FuncionFormInput } from '../../schemas/funcion.
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
       (save)="onSave(crudTable)"
+      (viewDetail)="onViewDetail($event)"
     >
       <div form-content>
         <!-- El formulario SIEMPRE se muestra cuando el modal está abierto -->
@@ -125,6 +127,7 @@ import { FuncionFormSchema, type FuncionFormInput } from '../../schemas/funcion.
 export class FuncionesPage {
   readonly funcionesService = inject(FuncionesService);
   private readonly alertService = inject(AlertService);
+  private readonly router = inject(Router);
 
   saving = signal(false);
   editingFuncion = signal<Funcion | null>(null);
@@ -141,6 +144,7 @@ export class FuncionesPage {
     title: 'Administrar Funciones/Perfiles',
     pageSize: 25,
     searchPlaceholder: 'Buscar por nombre o sigla...',
+    showViewDetail: true,
     columns: [
       { key: 'id', label: 'ID', sortable: true },
       { key: 'nombre', label: 'Nombre', sortable: true },
@@ -223,5 +227,9 @@ export class FuncionesPage {
       delete newErrors[field];
       this.formErrors.set(newErrors);
     }
+  }
+
+  onViewDetail(id: number) {
+    this.router.navigate(['/funciones', id]);
   }
 }

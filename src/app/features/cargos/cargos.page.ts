@@ -1,6 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CargosService, Cargo } from '../../core/services/cargos.service';
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
@@ -24,6 +25,7 @@ import { CargoFormSchema, type CargoFormInput } from '../../schemas/cargo.schema
       [saving]="saving"
       (modalOpened)="onModalOpened($event)"
       (save)="onSave(crudTable)"
+      (viewDetail)="onViewDetail($event)"
     >
       <div form-content>
         <!-- El formulario SIEMPRE se muestra cuando el modal está abierto -->
@@ -142,6 +144,7 @@ import { CargoFormSchema, type CargoFormInput } from '../../schemas/cargo.schema
 export class CargosPage {
   readonly cargosService = inject(CargosService);
   private readonly alertService = inject(AlertService);
+  private readonly router = inject(Router);
 
   saving = signal(false);
   editingCargo = signal<Cargo | null>(null);
@@ -159,6 +162,7 @@ export class CargosPage {
     title: 'Administrar Cargos',
     pageSize: 25,
     searchPlaceholder: 'Buscar por código, nombre o descripción...',
+    showViewDetail: true,
     columns: [
       { key: 'id', label: 'ID', sortable: true },
       { key: 'codigo', label: 'Código', sortable: true },
@@ -243,5 +247,9 @@ export class CargosPage {
       delete newErrors[field];
       this.formErrors.set(newErrors);
     }
+  }
+
+  onViewDetail(id: number) {
+    this.router.navigate(['/cargos', id]);
   }
 }
