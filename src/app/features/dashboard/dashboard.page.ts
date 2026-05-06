@@ -43,8 +43,8 @@ import { CargosByNivelChartComponent } from './components/cargos-by-nivel-chart.
               <select
                 id="institucion-select"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white"
-                [value]="selectedInstitucionId() || ''"
-                (change)="onInstitucionChange($event)"
+                [ngModel]="selectedInstitucionId()"
+                (ngModelChange)="selectedInstitucionId.set($event || null)"
               >
                 <option value="">-- Todas las instituciones --</option>
                 @for (inst of instituciones(); track inst.id) {
@@ -74,8 +74,8 @@ import { CargosByNivelChartComponent } from './components/cargos-by-nivel-chart.
               <select
                 id="nivel-select"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white"
-                [value]="selectedNivelId() || ''"
-                (change)="onNivelChange($event)"
+                [ngModel]="selectedNivelId()"
+                (ngModelChange)="selectedNivelId.set($event || null)"
               >
                 <option value="">-- Todos los niveles --</option>
                 @for (nivel of niveles(); track nivel.id) {
