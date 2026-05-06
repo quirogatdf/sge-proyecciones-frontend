@@ -55,4 +55,24 @@ export class ProyeccionesService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.getApiUrl('proyecciones')}/${id}`);
   }
+
+  /**
+   * Get proyecciones filtered by institucion ID
+   * Backend may support query param: /api/proyecciones?institucion_id=X
+   */
+  getByInstitucion(institucionId: string | number): Observable<ProyeccionResponse> {
+    return this.http.get<ProyeccionResponse>(
+      `${this.getApiUrl('proyecciones')}?institucion_id=${institucionId}`
+    );
+  }
+
+  /**
+   * Get all proyecciones with nivel relationship eager loaded
+   * Used for dashboard chart: cargos by nivel
+   */
+  getAllWithNivel(): Observable<ProyeccionResponse> {
+    return this.http.get<ProyeccionResponse>(
+      `${this.getApiUrl('proyecciones')}?include=nivel`
+    );
+  }
 }
