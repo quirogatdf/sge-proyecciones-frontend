@@ -629,7 +629,7 @@ formData: any = {
         render: (item: Proyeccion) => item.id_puesto || '-'
       },
     ],
-    searchFields: ['id', 'motivo', 'n_expediente']
+    // searchFields removed - now searches all columns including rendered content
   };
 
   ngOnInit() {

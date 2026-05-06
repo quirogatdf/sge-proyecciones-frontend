@@ -433,19 +433,48 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
     const items = this.items();
     if (!search) return items;
 
-    const searchFields =
-      this.config.searchFields ||
-      this.config.columns
-        .filter((col) => col.searchFields || col.sortable !== false)
-        .flatMap((col) => col.searchFields || [col.key]);
+    // Determine which fields to search in
+    const fieldsToSearch = this.config.searchFields
+      ? this.config.searchFields
+      : this.config.columns.flatMap(col => col.searchFields || [col.key]);
 
-    return items.filter((item) =>
-      searchFields.some((field) => {
+    // Build a map of field -> column for columns with render functions
+    const renderColumns = new Map<string, ColumnConfig<T>>();
+    this.config.columns.forEach(col => {
+      if (col.render) {
+        renderColumns.set(col.key as string, col);
+        if (col.searchFields) {
+          col.searchFields.forEach(f => renderColumns.set(f, col));
+        }
+      }
+    });
+
+    return items.filter(item => {
+      return fieldsToSearch.some(field => {
+        // Check if this field has a render function
+        const col = renderColumns.get(field);
+        if (col?.render) {
+          const rendered = col.render(item);
+          if (typeof rendered === 'string') {
+            const text = this.stripHtml(rendered).toLowerCase();
+            return text.includes(search);
+          }
+          return false;
+        }
+
+        // Otherwise, search in the raw value
         const value = item[field as keyof T];
-        return value && String(value).toLowerCase().includes(search);
-      }),
-    );
+        return value != null && String(value).toLowerCase().includes(search);
+      });
+    });
   });
+
+  private stripHtml(html: string): string {
+    return html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
 
   sortedItems = computed(() => {
     const items = [...this.filteredItems()];
