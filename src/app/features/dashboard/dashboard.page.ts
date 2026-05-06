@@ -120,9 +120,9 @@ export class DashboardPage {
 
   // Signals for state
   readonly instituciones = signal<Institucion[]>([]);
-  readonly selectedInstitucionId = signal<string | null>(null);
+  readonly selectedInstitucionId = signal<string>(''); // Default: empty = all
   readonly niveles = signal<Nivel[]>([]);
-  readonly selectedNivelId = signal<string | null>(null);
+  readonly selectedNivelId = signal<string>(''); // Default: empty = all
   readonly cargosByYear = signal<CargosByYear>([]);
   readonly cargosByNivel = signal<CargosByNivel>([]);
   readonly loading = signal(true);
@@ -149,14 +149,12 @@ export class DashboardPage {
 
   onInstitucionChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    const value = select.value;
-    this.selectedInstitucionId.set(value || null);
+    this.selectedInstitucionId.set(select.value);
   }
 
   onNivelChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    const value = select.value;
-    this.selectedNivelId.set(value || null);
+    this.selectedNivelId.set(select.value);
   }
 
   private loadInstituciones(): void {
