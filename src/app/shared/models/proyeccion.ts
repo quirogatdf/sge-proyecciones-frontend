@@ -22,7 +22,9 @@ export interface Proyeccion {
   resolucion_previa_continuidad?: string | null;
   resolucion_ministerial_rect1?: string | null;
   resolucion_ministerial_rect2?: string | null;
-  
+  destino_anterior?: string | null;
+  destino_nuevo?: string | null;
+
   // Relationships (populated when eager loaded)
   nivel?: {
     id: number;

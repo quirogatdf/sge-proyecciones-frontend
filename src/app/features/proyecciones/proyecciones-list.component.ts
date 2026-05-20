@@ -286,6 +286,38 @@ interface SelectOption {
             </div>
           </div>
 
+          <!-- Destinos -->
+          <h3 class="section-title">Destinos</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="destino_anterior">Destino Anterior</label>
+              <input 
+                id="destino_anterior" 
+                type="text" 
+                [(ngModel)]="formData.destino_anterior" 
+                placeholder="Opcional"
+              />
+            </div>
+
+            <div class="form-group" [class.has-error]="hasFieldError('destino_nuevo')">
+              <label for="destino_nuevo">Destino Nuevo *</label>
+              <input 
+                id="destino_nuevo" 
+                type="text" 
+                [(ngModel)]="formData.destino_nuevo" 
+                placeholder="Ingrese destino nuevo..."
+              />
+              @if (getFieldErrors('destino_nuevo').length > 0) {
+                <div class="error-messages">
+                  @for (error of getFieldErrors('destino_nuevo'); track error) {
+                    <small class="error-text">{{ error }}</small>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
           <!-- Resoluciones -->
           <h3 class="section-title">Resoluciones y Disposiciones</h3>
           
@@ -580,7 +612,9 @@ formData: any = {
   año: '',
   resolucion_previa_continuidad: '',
   resolucion_ministerial_rect1: '',
-  resolucion_ministerial_rect2: ''
+  resolucion_ministerial_rect2: '',
+  destino_anterior: '',
+  destino_nuevo: ''
 };
 
   tableConfig: CrudTableConfig<Proyeccion> = {
@@ -621,7 +655,7 @@ formData: any = {
         }
       },
       { key: 'motivo', label: 'Motivo', sortable: true },
-      { key: 'n_expediente', label: 'N° Expediente', sortable: false },
+      { key: 'n_expediente', label: 'Resolución Ministerial', sortable: false },
       { 
         key: 'id_puesto', 
         label: 'ID Puesto', 
@@ -744,7 +778,9 @@ formData: any = {
         año: item['año'] || '',
         resolucion_previa_continuidad: item.resolucion_previa_continuidad || '',
         resolucion_ministerial_rect1: item.resolucion_ministerial_rect1 || '',
-        resolucion_ministerial_rect2: item.resolucion_ministerial_rect2 || ''
+        resolucion_ministerial_rect2: item.resolucion_ministerial_rect2 || '',
+        destino_anterior: item.destino_anterior || '',
+        destino_nuevo: item.destino_nuevo || ''
       };
     } else {
       // Nuevo - limpiar formulario
@@ -770,7 +806,9 @@ formData: any = {
         id_puesto: null,
         resolucion_previa_continuidad: '',
         resolucion_ministerial_rect1: '',
-        resolucion_ministerial_rect2: ''
+        resolucion_ministerial_rect2: '',
+        destino_anterior: '',
+        destino_nuevo: ''
       };
     }
   }
@@ -785,6 +823,7 @@ formData: any = {
     if (!this.formData.motivo) errors['motivo'] = ['El motivo es obligatorio'];
     if (!this.formData.fecha_desde) errors['fecha_desde'] = ['La fecha desde es obligatoria'];
     if (!this.formData.id_institucion) errors['id_institucion'] = ['La institución es obligatoria'];
+    if (!this.formData.destino_nuevo) errors['destino_nuevo'] = ['El destino nuevo es obligatorio'];
 
     if (Object.keys(errors).length > 0) {
       this.formErrors.set(errors);

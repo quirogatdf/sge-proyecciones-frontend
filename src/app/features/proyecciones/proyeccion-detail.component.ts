@@ -139,6 +139,20 @@ import { ActivatedRoute, Router } from '@angular/router';
           </div>
 
           <div class="detail-section">
+            <h2>Destinos</h2>
+            <div class="detail-grid">
+              <div class="detail-item">
+                <label>Destino Anterior:</label>
+                <span>{{ proyeccion()?.destino_anterior || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <label>Destino Nuevo:</label>
+                <span>{{ proyeccion()?.destino_nuevo || '-' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
             <h2>Resoluciones y Disposiciones</h2>
             <div class="detail-grid">
               <div class="detail-item">
