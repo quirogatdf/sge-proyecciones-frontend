@@ -623,12 +623,24 @@ export class ProyeccionesListComponent implements OnInit {
         sortable: true,
         render: (item: Proyeccion) => item.nivel?.nombre || 'N/A',
       },
-      {
-        key: 'id_institucion',
-        label: 'Institución',
-        sortable: true,
-        render: (item: Proyeccion) => item.institucion?.nombre || 'N/A',
-      },
+{ 
+  key: 'id_institucion', 
+  label: 'Institución', 
+  sortable: true,
+  render: (item: Proyeccion) => item.institucion?.nombre || 'N/A'
+},
+{ 
+  key: 'orden', 
+  label: 'Orden', 
+  sortable: true,
+  render: (item: Proyeccion) => item.orden || '-'
+},
+{ 
+  key: 'año', 
+  label: 'Año', 
+  sortable: true,
+  render: (item: Proyeccion) => item['año'] || '-'
+},
       {
         key: 'año',
         label: 'Año',
