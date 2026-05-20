@@ -28,20 +28,20 @@ interface SelectOption {
         <h1>Proyecciones</h1>
       </header>
 
-        <!-- Filtro por nivel -->
-        <div class="filters">
-          <div class="filter-group">
-            <label for="nivelFiltro">Filtrar por nivel:</label>
-              <app-searchable-select
-               id="nivelFiltro"
-               [options]="nivelesOptions()"
-               placeholder="Todos los niveles"
-               [(value)]="selectedNivelId"
-             />
-          </div>
+      <!-- Filtro por nivel -->
+      <div class="filters">
+        <div class="filter-group">
+          <label for="nivelFiltro">Filtrar por nivel:</label>
+          <app-searchable-select
+            id="nivelFiltro"
+            [options]="nivelesOptions()"
+            placeholder="Todos los niveles"
+            [(value)]="selectedNivelId"
+          />
         </div>
+      </div>
 
-       <app-crud-table
+      <app-crud-table
         #crudTable
         [config]="tableConfig"
         [service]="proyeccionesService"
@@ -53,7 +53,7 @@ interface SelectOption {
         <div form-content>
           <!-- Información básica -->
           <h3 class="section-title">Información Básica</h3>
-          
+
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasFieldError('id_nivel')">
               <label for="id_nivel">Nivel *</label>
@@ -93,10 +93,10 @@ interface SelectOption {
           <div class="form-row">
             <div class="form-group">
               <label for="id_puesto">ID Puesto</label>
-              <input 
-                id="id_puesto" 
-                type="text" 
-                [(ngModel)]="formData.id_puesto" 
+              <input
+                id="id_puesto"
+                type="text"
+                [(ngModel)]="formData.id_puesto"
                 placeholder="Opcional"
               />
             </div>
@@ -142,10 +142,10 @@ interface SelectOption {
             <div class="form-row">
               <div class="form-group">
                 <label for="resolucion_previa_continuidad">Resolución Previa Continuidad</label>
-                <input 
-                  id="resolucion_previa_continuidad" 
-                  type="text" 
-                  [(ngModel)]="formData.resolucion_previa_continuidad" 
+                <input
+                  id="resolucion_previa_continuidad"
+                  type="text"
+                  [(ngModel)]="formData.resolucion_previa_continuidad"
                   placeholder="Opcional"
                 />
               </div>
@@ -155,76 +155,66 @@ interface SelectOption {
           <div class="form-row">
             <div class="form-group">
               <label for="n_expediente">N° Expediente</label>
-              <input 
-                id="n_expediente" 
-                type="text" 
-                [(ngModel)]="formData.n_expediente" 
+              <input
+                id="n_expediente"
+                type="text"
+                [(ngModel)]="formData.n_expediente"
                 placeholder="Opcional"
               />
             </div>
 
             <div class="form-group">
               <label for="año">Año</label>
-              <input 
-                id="año" 
-                type="text" 
+              <input
+                id="año"
+                type="text"
                 maxlength="4"
-                [(ngModel)]="formData['año']" 
+                [(ngModel)]="formData['año']"
                 placeholder="Opcional"
               />
             </div>
- 
+
             <div class="form-group">
               <label for="orden">Orden</label>
-              <input 
-                id="orden" 
-                type="number" 
-                [(ngModel)]="formData.orden" 
-                placeholder="Opcional"
-              />
+              <input id="orden" type="number" [(ngModel)]="formData.orden" placeholder="Opcional" />
             </div>
           </div>
 
           <!-- Fechas -->
           <h3 class="section-title">Fechas y Horarios</h3>
-          
+
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasFieldError('fecha_desde')">
               <label for="fecha_desde">Fecha Desde *</label>
-              <input 
-                id="fecha_desde" 
-                type="date" 
-                [(ngModel)]="formData.fecha_desde" 
+              <input
+                id="fecha_desde"
+                type="date"
+                [(ngModel)]="formData.fecha_desde"
                 (input)="clearFieldError('fecha_desde')"
               />
             </div>
 
             <div class="form-group">
               <label for="fecha_hasta">Fecha Hasta</label>
-              <input 
-                id="fecha_hasta" 
-                type="date" 
-                [(ngModel)]="formData.fecha_hasta" 
+              <input
+                id="fecha_hasta"
+                type="date"
+                [(ngModel)]="formData.fecha_hasta"
                 (input)="clearFieldError('fecha_hasta')"
               />
             </div>
 
             <div class="form-group">
               <label for="horar">Horas</label>
-              <input 
-                id="horar" 
-                type="number" 
-                [(ngModel)]="formData.horar" 
-                placeholder="Opcional"
-              />
+              <input id="horar" type="number" [(ngModel)]="formData.horar" placeholder="Opcional" />
             </div>
 
             <div class="form-group">
               <label for="cargos">Cargos</label>
-              <input 
-                id="cargos" 
-                type="number" 
-                [(ngModel)]="formData.cargos" 
+              <input
+                id="cargos"
+                type="number"
+                [(ngModel)]="formData.cargos"
                 placeholder="Opcional"
               />
             </div>
@@ -232,7 +222,7 @@ interface SelectOption {
 
           <!-- Relaciones -->
           <h3 class="section-title">Relaciones</h3>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="id_cargo">Cargo *</label>
@@ -288,24 +278,24 @@ interface SelectOption {
 
           <!-- Destinos -->
           <h3 class="section-title">Destinos</h3>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="destino_anterior">Destino Anterior</label>
-              <input 
-                id="destino_anterior" 
-                type="text" 
-                [(ngModel)]="formData.destino_anterior" 
+              <input
+                id="destino_anterior"
+                type="text"
+                [(ngModel)]="formData.destino_anterior"
                 placeholder="Opcional"
               />
             </div>
 
             <div class="form-group" [class.has-error]="hasFieldError('destino_nuevo')">
               <label for="destino_nuevo">Destino Nuevo *</label>
-              <input 
-                id="destino_nuevo" 
-                type="text" 
-                [(ngModel)]="formData.destino_nuevo" 
+              <input
+                id="destino_nuevo"
+                type="text"
+                [(ngModel)]="formData.destino_nuevo"
                 placeholder="Ingrese destino nuevo..."
               />
               @if (getFieldErrors('destino_nuevo').length > 0) {
@@ -320,24 +310,24 @@ interface SelectOption {
 
           <!-- Resoluciones -->
           <h3 class="section-title">Resoluciones y Disposiciones</h3>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="resolucion_ministerial">Resolución Ministerial</label>
-              <input 
-                id="resolucion_ministerial" 
-                type="text" 
-                [(ngModel)]="formData.resolucion_ministerial" 
+              <input
+                id="resolucion_ministerial"
+                type="text"
+                [(ngModel)]="formData.resolucion_ministerial"
                 placeholder="Opcional"
               />
             </div>
 
             <div class="form-group">
               <label for="resolucion_ministerial_ext">Res. Ministerial Ext.</label>
-              <input 
-                id="resolucion_ministerial_ext" 
-                type="text" 
-                [(ngModel)]="formData.resolucion_ministerial_ext" 
+              <input
+                id="resolucion_ministerial_ext"
+                type="text"
+                [(ngModel)]="formData.resolucion_ministerial_ext"
                 placeholder="Opcional"
               />
             </div>
@@ -346,20 +336,20 @@ interface SelectOption {
           <div class="form-row">
             <div class="form-group">
               <label for="resolucion_ministerial_rect1">Resolución Ministerial Rect. 1</label>
-              <input 
-                id="resolucion_ministerial_rect1" 
-                type="text" 
-                [(ngModel)]="formData.resolucion_ministerial_rect1" 
+              <input
+                id="resolucion_ministerial_rect1"
+                type="text"
+                [(ngModel)]="formData.resolucion_ministerial_rect1"
                 placeholder="Opcional"
               />
             </div>
 
             <div class="form-group">
               <label for="resolucion_ministerial_rect2">Resolución Ministerial Rect. 2</label>
-              <input 
-                id="resolucion_ministerial_rect2" 
-                type="text" 
-                [(ngModel)]="formData.resolucion_ministerial_rect2" 
+              <input
+                id="resolucion_ministerial_rect2"
+                type="text"
+                [(ngModel)]="formData.resolucion_ministerial_rect2"
                 placeholder="Opcional"
               />
             </div>
@@ -368,20 +358,20 @@ interface SelectOption {
           <div class="form-row">
             <div class="form-group">
               <label for="disposicion_sgnij">Disposición SGNIJ</label>
-              <input 
-                id="disposicion_sgnij" 
-                type="text" 
-                [(ngModel)]="formData.disposicion_sgnij" 
+              <input
+                id="disposicion_sgnij"
+                type="text"
+                [(ngModel)]="formData.disposicion_sgnij"
                 placeholder="Opcional"
               />
             </div>
 
             <div class="form-group">
               <label for="rect_disposoco_sgnij">Rectificación</label>
-              <input 
-                id="rect_disposoco_sgnij" 
-                type="text" 
-                [(ngModel)]="formData.rect_disposoco_sgnij" 
+              <input
+                id="rect_disposoco_sgnij"
+                type="text"
+                [(ngModel)]="formData.rect_disposoco_sgnij"
                 placeholder="Opcional"
               />
             </div>
@@ -390,149 +380,151 @@ interface SelectOption {
       </app-crud-table>
     </div>
   `,
-  styles: [`
-    .page {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
+  styles: [
+    `
+      .page {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
 
-    .page-header h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--foreground);
-      margin: 0;
-    }
+      .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin: 0;
+      }
 
-    .filters {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+      .filters {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
 
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.375rem;
-    }
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+      }
 
-    .filter-group label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--foreground);
-    }
+      .filter-group label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--foreground);
+      }
 
-    .filter-select {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      background: var(--background);
-      color: var(--foreground);
-      min-width: 200px;
-    }
+      .filter-select {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        background: var(--background);
+        color: var(--foreground);
+        min-width: 200px;
+      }
 
-    .filter-select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
+      .filter-select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
 
-    .section-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--foreground);
-      margin: 1rem 0 0.5rem 0;
-      padding-bottom: 0.25rem;
-      border-bottom: 1px solid var(--border);
-    }
+      .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin: 1rem 0 0.5rem 0;
+        padding-bottom: 0.25rem;
+        border-bottom: 1px solid var(--border);
+      }
 
-    .form-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 0.5rem;
-    }
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+      }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.375rem;
-      margin-bottom: 0.5rem;
-    }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        margin-bottom: 0.5rem;
+      }
 
-    .form-group label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--foreground);
-    }
+      .form-group label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--foreground);
+      }
 
-    .form-group input,
-    .form-group select {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      background: var(--background);
-      color: var(--foreground);
-      transition: border-color 0.2s ease;
-    }
+      .form-group input,
+      .form-group select {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        background: var(--background);
+        color: var(--foreground);
+        transition: border-color 0.2s ease;
+      }
 
-    .form-group input:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
 
-    .form-group.has-error input,
-    .form-group.has-error select {
-      border-color: var(--destructive);
-    }
+      .form-group.has-error input,
+      .form-group.has-error select {
+        border-color: var(--destructive);
+      }
 
-    .form-group.has-error input:focus,
-    .form-group.has-error select:focus {
-      border-color: var(--destructive);
-      box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 20%, transparent);
-    }
+      .form-group.has-error input:focus,
+      .form-group.has-error select:focus {
+        border-color: var(--destructive);
+        box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 20%, transparent);
+      }
 
-    .error-messages {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      margin-top: 0.25rem;
-    }
+      .error-messages {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin-top: 0.25rem;
+      }
 
-    .error-text {
-      font-size: 0.75rem;
-      color: var(--destructive);
-      display: block;
-    }
+      .error-text {
+        font-size: 0.75rem;
+        color: var(--destructive);
+        display: block;
+      }
 
-    .status-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-align: center;
-      white-space: nowrap;
-    }
+      .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        white-space: nowrap;
+      }
 
-    .status-autorizado {
-      background-color: color-mix(in oklch, var(--success, #22c55e) 15%, transparent);
-      color: var(--success, #22c55e);
-    }
+      .status-autorizado {
+        background-color: color-mix(in oklch, var(--success, #22c55e) 15%, transparent);
+        color: var(--success, #22c55e);
+      }
 
-    .status-rechazado {
-      background-color: color-mix(in oklch, var(--destructive) 15%, transparent);
-      color: var(--destructive);
-    }
+      .status-rechazado {
+        background-color: color-mix(in oklch, var(--destructive) 15%, transparent);
+        color: var(--destructive);
+      }
 
-    .status-pendiente {
-      background-color: color-mix(in oklch, var(--warning, #f59e0b) 15%, transparent);
-      color: var(--warning, #f59e0b);
-    }
-  `]
+      .status-pendiente {
+        background-color: color-mix(in oklch, var(--warning, #f59e0b) 15%, transparent);
+        color: var(--warning, #f59e0b);
+      }
+    `,
+  ],
 })
 export class ProyeccionesListComponent implements OnInit {
   readonly proyeccionesService = inject(ProyeccionesService);
@@ -567,55 +559,56 @@ export class ProyeccionesListComponent implements OnInit {
   readonly estadosOptions = signal<SelectOption[]>([
     { id: 'Autorizado', label: 'Autorizado' },
     { id: 'Rechazado', label: 'Rechazado' },
-    { id: 'Pendiente', label: 'Pendiente' }
+    { id: 'Pendiente', label: 'Pendiente' },
   ]);
 
   readonly motivosOptions = signal<SelectOption[]>([
     { id: 'Creación', label: 'Creación' },
     { id: 'Continuidad', label: 'Continuidad' },
     { id: 'Baja', label: 'Baja' },
-    { id: 'Sin definir', label: 'Sin definir' }
+    { id: 'Sin definir', label: 'Sin definir' },
   ]);
 
   // Opciones computadas para selects dinámicos
   readonly nivelesOptions = computed(() => [
     { id: null as unknown as number, label: 'Todos los niveles' },
-    ...this.niveles().map(n => ({ id: n.id, label: n.nombre }))
+    ...this.niveles().map((n) => ({ id: n.id, label: n.nombre })),
   ]);
 
   readonly institucionesOptions = computed(() =>
-    this.instituciones().map(i => ({ id: i.id, label: i.nombre }))
+    this.instituciones().map((i) => ({ id: i.id, label: i.nombre })),
   );
 
   readonly cargosOptions = computed(() =>
-    this.cargos().map(c => ({ id: c.id, label: `${c.codigo} - ${c.nombre}` }))
+    this.cargos().map((c) => ({ id: c.id, label: `${c.codigo} - ${c.nombre}` })),
   );
 
   readonly funcionesOptions = computed(() =>
-    this.funciones().map(f => ({ id: f.id, label: f.nombre }))
+    this.funciones().map((f) => ({ id: f.id, label: f.nombre })),
   );
 
   readonly turnosOptions = computed(() =>
-    this.turnos().map(t => ({ id: t.id, label: t.nombre }))
+    this.turnos().map((t) => ({ id: t.id, label: t.nombre })),
   );
   editingId = signal<number | null>(null);
 
   submitted = signal(false);
   formErrors = signal<Record<string, string[]>>({});
-  
-formData: any = {
-  estado: '',
-  motivo: '',
-  fecha_desde: '',
-  fecha_hasta: '',
-  id_puesto: '',
-  año: '',
-  resolucion_previa_continuidad: '',
-  resolucion_ministerial_rect1: '',
-  resolucion_ministerial_rect2: '',
-  destino_anterior: '',
-  destino_nuevo: ''
-};
+
+  formData: any = {
+    estado: '',
+    motivo: '',
+    fecha_desde: '',
+    fecha_hasta: '',
+    id_puesto: '',
+    año: '',
+    resolucion_ministerial: '',
+    resolucion_previa_continuidad: '',
+    resolucion_ministerial_rect1: '',
+    resolucion_ministerial_rect2: '',
+    destino_anterior: '',
+    destino_nuevo: '',
+  };
 
   tableConfig: CrudTableConfig<Proyeccion> = {
     title: 'Proyecciones',
@@ -624,43 +617,51 @@ formData: any = {
     showViewDetail: true,
     columns: [
       { key: 'id', label: 'ID', sortable: true },
-      { 
-        key: 'id_nivel', 
-        label: 'Nivel', 
+      {
+        key: 'id_nivel',
+        label: 'Nivel',
         sortable: true,
-        render: (item: Proyeccion) => item.nivel?.nombre || 'N/A'
+        render: (item: Proyeccion) => item.nivel?.nombre || 'N/A',
       },
-      { 
-        key: 'id_institucion', 
-        label: 'Institución', 
+      {
+        key: 'id_institucion',
+        label: 'Institución',
         sortable: true,
-        render: (item: Proyeccion) => item.institucion?.nombre || 'N/A'
+        render: (item: Proyeccion) => item.institucion?.nombre || 'N/A',
       },
-      { 
-        key: 'año', 
-        label: 'Año', 
+      {
+        key: 'año',
+        label: 'Año',
         sortable: true,
-        render: (item: Proyeccion) => item['año'] || '-'
+        render: (item: Proyeccion) => item['año'] || '-',
       },
-      { 
-        key: 'estado', 
-        label: 'Estado', 
+      {
+        key: 'estado',
+        label: 'Estado',
         sortable: true,
         render: (item: Proyeccion) => {
-          const color = item.estado === 'Autorizado' ? '#22c55e' :
-                     item.estado === 'Rechazado' ? '#ef4444' : '#f59e0b';
-          const bgColor = item.estado === 'Autorizado' ? 'rgba(34, 197, 94, 0.15)' :
-                         item.estado === 'Rechazado' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+          const color =
+            item.estado === 'Autorizado'
+              ? '#22c55e'
+              : item.estado === 'Rechazado'
+                ? '#ef4444'
+                : '#f59e0b';
+          const bgColor =
+            item.estado === 'Autorizado'
+              ? 'rgba(34, 197, 94, 0.15)'
+              : item.estado === 'Rechazado'
+                ? 'rgba(239, 68, 68, 0.15)'
+                : 'rgba(245, 158, 11, 0.15)';
           return `<span style="display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;text-align:center;white-space:nowrap;background-color:${bgColor};color:${color};">${item.estado}</span>`;
-        }
+        },
       },
       { key: 'motivo', label: 'Motivo', sortable: true },
-      { key: 'n_expediente', label: 'Resolución Ministerial', sortable: false },
-      { 
-        key: 'id_puesto', 
-        label: 'ID Puesto', 
+      { key: 'resolucion_ministerial', label: 'Resolución Ministerial', sortable: false },
+      {
+        key: 'id_puesto',
+        label: 'ID Puesto',
         sortable: true,
-        render: (item: Proyeccion) => item.id_puesto || '-'
+        render: (item: Proyeccion) => item.id_puesto || '-',
       },
     ],
     // searchFields removed - now searches all columns including rendered content
@@ -678,12 +679,14 @@ formData: any = {
     this.nivelesService.getAll().subscribe({
       next: (res: any) => {
         const data = res.data;
-        this.niveles.set(Array.isArray(data) ? data.map((n: any) => ({ id: n.id, nombre: n.nombre })) : []);
+        this.niveles.set(
+          Array.isArray(data) ? data.map((n: any) => ({ id: n.id, nombre: n.nombre })) : [],
+        );
       },
       error: (err: any) => {
         console.error('Error cargando niveles:', err);
         this.alertService.error('Error', 'No se pudieron cargar los niveles');
-      }
+      },
     });
   }
 
@@ -694,7 +697,7 @@ formData: any = {
         // Asignar directamente como Cargo[] (no mapear para no perder codigo)
         this.cargos.set(Array.isArray(data) ? data : [data]);
       },
-      error: (err: any) => console.error('Error cargando cargos:', err)
+      error: (err: any) => console.error('Error cargando cargos:', err),
     });
   }
 
@@ -702,9 +705,11 @@ formData: any = {
     this.funcionesService.getAll().subscribe({
       next: (res: any) => {
         const data = res.data;
-        this.funciones.set(Array.isArray(data) ? data.map((f: any) => ({ id: f.id, nombre: f.nombre })) : []);
+        this.funciones.set(
+          Array.isArray(data) ? data.map((f: any) => ({ id: f.id, nombre: f.nombre })) : [],
+        );
       },
-      error: (err: any) => console.error('Error cargando funciones:', err)
+      error: (err: any) => console.error('Error cargando funciones:', err),
     });
   }
 
@@ -712,9 +717,11 @@ formData: any = {
     this.turnosService.getAll().subscribe({
       next: (res: any) => {
         const data = res.data;
-        this.turnos.set(Array.isArray(data) ? data.map((t: any) => ({ id: t.id, nombre: t.nombre })) : []);
+        this.turnos.set(
+          Array.isArray(data) ? data.map((t: any) => ({ id: t.id, nombre: t.nombre })) : [],
+        );
       },
-      error: (err: any) => console.error('Error cargando turnos:', err)
+      error: (err: any) => console.error('Error cargando turnos:', err),
     });
   }
 
@@ -722,12 +729,14 @@ formData: any = {
     this.institucionesService.getAll().subscribe({
       next: (res: any) => {
         const data = res.data;
-        this.instituciones.set(Array.isArray(data) ? data.map((i: any) => ({ id: i.id, nombre: i.nombre })) : []);
+        this.instituciones.set(
+          Array.isArray(data) ? data.map((i: any) => ({ id: i.id, nombre: i.nombre })) : [],
+        );
       },
       error: (err: any) => {
         console.error('Error cargando instituciones:', err);
         this.alertService.error('Error', 'No se pudieron cargar las instituciones');
-      }
+      },
     });
   }
 
@@ -780,7 +789,7 @@ formData: any = {
         resolucion_ministerial_rect1: item.resolucion_ministerial_rect1 || '',
         resolucion_ministerial_rect2: item.resolucion_ministerial_rect2 || '',
         destino_anterior: item.destino_anterior || '',
-        destino_nuevo: item.destino_nuevo || ''
+        destino_nuevo: item.destino_nuevo || '',
       };
     } else {
       // Nuevo - limpiar formulario
@@ -808,14 +817,14 @@ formData: any = {
         resolucion_ministerial_rect1: '',
         resolucion_ministerial_rect2: '',
         destino_anterior: '',
-        destino_nuevo: ''
+        destino_nuevo: '',
       };
     }
   }
 
   onSave(crudTable: any) {
     this.submitted.set(true);
-    
+
     // Validación básica
     const errors: Record<string, string[]> = {};
     if (!this.formData.id_nivel) errors['id_nivel'] = ['El nivel es obligatorio'];
@@ -832,22 +841,24 @@ formData: any = {
 
     this.saving.set(true);
     this.formErrors.set({});
- 
-     // Limpiar formData: eliminar campos vacíos o null para evitar errores 422
-     const cleanedData = Object.fromEntries(
-       Object.entries(this.formData).filter(([_, value]) => value !== '' && value !== null)
-     );
-     console.log('Enviando cleanedData:', JSON.stringify(cleanedData, null, 2));
-     
-     const isEditing = this.editingId() !== null;
-     const request = isEditing 
-       ? this.proyeccionesService.update(this.editingId()!, cleanedData)
-       : this.proyeccionesService.create(cleanedData);
-     
-     request.subscribe({
+
+    // Limpiar formData: eliminar campos vacíos o null para evitar errores 422
+    const cleanedData = Object.fromEntries(
+      Object.entries(this.formData).filter(([_, value]) => value !== '' && value !== null),
+    );
+    console.log('Enviando cleanedData:', JSON.stringify(cleanedData, null, 2));
+
+    const isEditing = this.editingId() !== null;
+    const request = isEditing
+      ? this.proyeccionesService.update(this.editingId()!, cleanedData)
+      : this.proyeccionesService.create(cleanedData);
+
+    request.subscribe({
       next: (res: any) => {
         this.saving.set(false);
-        const message = isEditing ? 'Proyección actualizada exitosamente' : 'Proyección creada exitosamente';
+        const message = isEditing
+          ? 'Proyección actualizada exitosamente'
+          : 'Proyección creada exitosamente';
         this.alertService.success('Éxito', res.message || message);
         crudTable.closeModal();
         crudTable.reloadData();
@@ -856,7 +867,7 @@ formData: any = {
         this.saving.set(false);
         console.error('Error guardando proyección:', err);
         console.error('Error body:', err.error);
-        
+
         if (err.status === 422 && err.error?.errors) {
           this.formErrors.set(err.error.errors);
           // Mostrar alerta con el primer error
@@ -867,7 +878,7 @@ formData: any = {
         } else {
           this.alertService.error('Error', 'No se pudo guardar la proyección');
         }
-      }
+      },
     });
   }
 
