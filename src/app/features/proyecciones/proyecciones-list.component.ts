@@ -610,72 +610,72 @@ export class ProyeccionesListComponent implements OnInit {
     destino_nuevo: '',
   };
 
-  tableConfig: CrudTableConfig<Proyeccion> = {
-    title: 'Proyecciones',
-    pageSize: 25,
-    searchPlaceholder: 'Buscar proyecciones...',
-    showViewDetail: true,
-    columns: [
-      { key: 'id', label: 'ID', sortable: true },
-      {
-        key: 'id_nivel',
-        label: 'Nivel',
-        sortable: true,
-        render: (item: Proyeccion) => item.nivel?.nombre || 'N/A',
-      },
+    tableConfig: CrudTableConfig<Proyeccion> = {
+      title: 'Proyecciones',
+      pageSize: 25,
+      searchPlaceholder: 'Buscar proyecciones...',
+      showViewDetail: true,
+      columns: [
+        { key: 'id', label: 'ID', sortable: true },
+        {
+          key: 'id_nivel',
+          label: 'Nivel',
+          sortable: true,
+          render: (item: Proyeccion) => item.nivel?.nombre || 'N/A',
+        },
+        { 
+          key: 'id_institucion', 
+          label: 'Institución', 
+          sortable: true,
+          render: (item: Proyeccion) => item.institucion?.nombre || 'N/A'
+        },
 { 
-  key: 'id_institucion', 
-  label: 'Institución', 
+  key: 'año', 
+  label: 'Año', 
   sortable: true,
-  render: (item: Proyeccion) => item.institucion?.nombre || 'N/A'
+  render: (item: Proyeccion) => {
+    const value = item['año'];
+    return value !== null && value !== undefined && value !== '' ? String(value) : '-';
+  }
 },
 { 
   key: 'orden', 
   label: 'Orden', 
   sortable: true,
-  render: (item: Proyeccion) => item.orden || '-'
+  render: (item: Proyeccion) => {
+    const value = item.orden;
+    return value !== null && value !== undefined && value !== '' ? String(value) : '-';
+  }
 },
-{ 
-  key: 'año', 
-  label: 'Año', 
-  sortable: true,
-  render: (item: Proyeccion) => item['año'] || '-'
-},
-      {
-        key: 'año',
-        label: 'Año',
-        sortable: true,
-        render: (item: Proyeccion) => item['año'] || '-',
-      },
-      {
-        key: 'estado',
-        label: 'Estado',
-        sortable: true,
-        render: (item: Proyeccion) => {
-          const color =
-            item.estado === 'Autorizado'
-              ? '#22c55e'
-              : item.estado === 'Rechazado'
-                ? '#ef4444'
-                : '#f59e0b';
-          const bgColor =
-            item.estado === 'Autorizado'
-              ? 'rgba(34, 197, 94, 0.15)'
-              : item.estado === 'Rechazado'
-                ? 'rgba(239, 68, 68, 0.15)'
-                : 'rgba(245, 158, 11, 0.15)';
-          return `<span style="display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;text-align:center;white-space:nowrap;background-color:${bgColor};color:${color};">${item.estado}</span>`;
+        {
+          key: 'estado',
+          label: 'Estado',
+          sortable: true,
+          render: (item: Proyeccion) => {
+            const color =
+              item.estado === 'Autorizado'
+                ? '#22c55e'
+                : item.estado === 'Rechazado'
+                  ? '#ef4444'
+                  : '#f59e0b';
+            const bgColor =
+              item.estado === 'Autorizado'
+                ? 'rgba(34, 197, 94, 0.15)'
+                : item.estado === 'Rechazado'
+                  ? 'rgba(239, 68, 68, 0.15)'
+                  : 'rgba(245, 158, 11, 0.15)';
+            return `<span style="display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;text-align:center;white-space:nowrap;background-color:${bgColor};color:${color};">${item.estado}</span>`;
+          },
         },
-      },
-      { key: 'motivo', label: 'Motivo', sortable: true },
-      { key: 'resolucion_ministerial', label: 'Resolución Ministerial', sortable: false },
-      {
-        key: 'id_puesto',
-        label: 'ID Puesto',
-        sortable: true,
-        render: (item: Proyeccion) => item.id_puesto || '-',
-      },
-    ],
+        { key: 'motivo', label: 'Motivo', sortable: true },
+        { key: 'resolucion_ministerial', label: 'Resolución Ministerial', sortable: true },
+        {
+          key: 'id_puesto',
+          label: 'ID Puesto',
+          sortable: true,
+          render: (item: Proyeccion) => item.id_puesto || '-',
+        },
+      ],
     // searchFields removed - now searches all columns including rendered content
   };
 
@@ -783,14 +783,14 @@ export class ProyeccionesListComponent implements OnInit {
         estado: item.estado || '',
         motivo: item.motivo || '',
         n_expediente: item.n_expediente || '',
-        orden: item.orden || null,
+        orden: item.orden !== null && item.orden !== undefined ? item.orden : null,
         fecha_desde: this.formatDateForInput(item.fecha_desde),
         fecha_hasta: this.formatDateForInput(item.fecha_hasta),
-        horar: item.horar || null,
-        cargos: item.cargos || null,
-        id_cargo: item.id_cargo || null,
-        id_funcion: item.id_funcion || null,
-        id_turno: item.id_turno || null,
+        horar: item.horar !== null && item.horar !== undefined ? item.horar : null,
+        cargos: item.cargos !== null && item.cargos !== undefined ? item.cargos : null,
+        id_cargo: item.id_cargo !== null && item.id_cargo !== undefined ? item.id_cargo : null,
+        id_funcion: item.id_funcion !== null && item.id_funcion !== undefined ? item.id_funcion : null,
+        id_turno: item.id_turno !== null && item.id_turno !== undefined ? item.id_turno : null,
         resolucion_ministerial: item.resolucion_ministerial || '',
         resolucion_ministerial_ext: item.resolucion_ministerial_ext || '',
         disposicion_sgnij: item.disposicion_sgnij || '',
