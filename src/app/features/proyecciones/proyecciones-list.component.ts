@@ -23,14 +23,21 @@ class ProyeccionesServiceWrapper {
       this.proyeccionesService.getAll().subscribe({
         next: (res: any) => {
           // Transformar los datos para agregar campos calculados
-          const transformedData = res.data.map((proyeccion: any) => ({
-            ...proyeccion,
-            localidad: proyeccion.institucion?.localidad || '',
-            nombreInstitucion: proyeccion.institucion?.nombre || '',
-            cargoDisplay: proyeccion.cargo
-              ? `${proyeccion.cargo.codigo} - ${proyeccion.cargo.nombre}`
-              : 'N/A'
-          }));
+          const transformedData = res.data.map((proyeccion: any) => {
+            const horar = proyeccion.horar != null ? Number(proyeccion.horar) : 0;
+            const cargos = proyeccion.cargos != null ? Number(proyeccion.cargos) : 0;
+            const cantidad = horar > 0 ? horar : cargos > 0 ? cargos : null;
+
+            return {
+              ...proyeccion,
+              localidad: proyeccion.institucion?.localidad || '',
+              nombreInstitucion: proyeccion.institucion?.nombre || '',
+              cargoDisplay: proyeccion.cargo
+                ? `${proyeccion.cargo.codigo} - ${proyeccion.cargo.nombre}`
+                : 'N/A',
+              cantidadDisplay: cantidad != null ? String(cantidad) : '-'
+            };
+          });
           observer.next({ data: transformedData });
           observer.complete();
         },
@@ -45,6 +52,7 @@ interface ProyeccionConLocalidad extends Proyeccion {
   localidad: string;
   nombreInstitucion: string;
   cargoDisplay: string;
+  cantidadDisplay: string;
 }
 
 interface SelectOption {
@@ -675,6 +683,12 @@ export class ProyeccionesListComponent implements OnInit {
         label: 'Institución',
         sortable: true,
         render: (item: ProyeccionConLocalidad) => item.nombreInstitucion || 'N/A'
+      },
+      {
+        key: 'cantidadDisplay',
+        label: 'Cantidad',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => item.cantidadDisplay
       },
       {
         key: 'cargoDisplay',
