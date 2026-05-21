@@ -34,6 +34,7 @@ export interface Proyeccion {
   cargo?: {
     id: number;
     nombre: string;
+    codigo: string;
   };
   funcion?: {
     id: number;
@@ -46,5 +47,6 @@ export interface Proyeccion {
   institucion?: {
     id: number;
     nombre: string;
+    localidad: string; // Campo agregado para mostrar la ciudad
   };
 }
