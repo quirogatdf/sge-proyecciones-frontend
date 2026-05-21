@@ -26,15 +26,15 @@ export class ProyeccionesService {
     return `${this.baseUrl}/${endpoint}`;
   }
 
-  getAll(): Observable<ProyeccionResponse> {
-    const nivelId = this.selectedNivelId();
-    
-    if (nivelId) {
-      return this.http.get<ProyeccionResponse>(this.getApiUrl(`proyecciones/nivel/${nivelId}`));
-    }
-    
-    return this.http.get<ProyeccionResponse>(this.getApiUrl('proyecciones'));
-  }
+   getAll(): Observable<ProyeccionResponse> {
+     const nivelId = this.selectedNivelId();
+     
+     if (nivelId) {
+       return this.http.get<ProyeccionResponse>(this.getApiUrl(`proyecciones/nivel/${nivelId}?include=institucion,cargo`));
+     }
+     
+     return this.http.get<ProyeccionResponse>(this.getApiUrl('proyecciones?include=institucion,cargo'));
+   }
 
   setNivelFiltro(nivelId: number | null): void {
     this.selectedNivelId.set(nivelId);
