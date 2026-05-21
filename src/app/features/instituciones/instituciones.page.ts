@@ -1,4 +1,12 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -19,12 +27,7 @@ interface SelectOption {
   selector: 'app-instituciones-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule,
-    FormsModule,
-    CrudTableComponent,
-    SearchableSelectComponent
-  ],
+  imports: [CommonModule, FormsModule, CrudTableComponent, SearchableSelectComponent],
   template: `
     <app-crud-table
       #crudTable
@@ -132,69 +135,71 @@ interface SelectOption {
       </div>
     </app-crud-table>
   `,
-  styles: [`
-    :host {
-      display: block;
-    }
+  styles: [
+    `
+      :host {
+        display: block;
+      }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.375rem;
-      margin-bottom: 1rem;
-    }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        margin-bottom: 1rem;
+      }
 
-    .form-group label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--foreground);
-    }
+      .form-group label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--foreground);
+      }
 
-    .form-group input,
-    .form-select {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      background: var(--background);
-      color: var(--foreground);
-      transition: border-color 0.2s ease;
-    }
+      .form-group input,
+      .form-select {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        background: var(--background);
+        color: var(--foreground);
+        transition: border-color 0.2s ease;
+      }
 
-    .form-select {
-      appearance: auto;
-    }
+      .form-select {
+        appearance: auto;
+      }
 
-    .form-group input:focus,
-    .form-select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
+      .form-group input:focus,
+      .form-select:focus {
+        outline: none;
+        border-color: var(--primary);
+      }
 
-    .form-group.has-error input,
-    .form-group.has-error .form-select {
-      border-color: var(--destructive);
-    }
+      .form-group.has-error input,
+      .form-group.has-error .form-select {
+        border-color: var(--destructive);
+      }
 
-    .form-group.has-error input:focus,
-    .form-group.has-error .form-select:focus {
-      border-color: var(--destructive);
-      box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 20%, transparent);
-    }
+      .form-group.has-error input:focus,
+      .form-group.has-error .form-select:focus {
+        border-color: var(--destructive);
+        box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 20%, transparent);
+      }
 
-    .error-messages {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      margin-top: 0.25rem;
-    }
+      .error-messages {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin-top: 0.25rem;
+      }
 
-    .error-text {
-      font-size: 0.75rem;
-      color: var(--destructive);
-      display: block;
-    }
-  `]
+      .error-text {
+        font-size: 0.75rem;
+        color: var(--destructive);
+        display: block;
+      }
+    `,
+  ],
 })
 export class InstitucionesPage implements OnInit {
   readonly institucionesService = inject(InstitucionesService);
@@ -209,17 +214,17 @@ export class InstitucionesPage implements OnInit {
   readonly localidadOptions = signal<SelectOption[]>([
     { id: 'Rio Grande', label: 'Río Grande' },
     { id: 'Ushuaia', label: 'Ushuaia' },
-    { id: 'Tolhuin', label: 'Tolhuin' }
+    { id: 'Tolhuin', label: 'Tolhuin' },
   ]);
 
   // Opciones computadas para niveles
-  readonly nivelesOptions = computed(() => 
-    this.niveles().map(n => ({ id: n.id, label: `${n.nombre} (${n.sigla || 'Sin sigla'})` }))
+  readonly nivelesOptions = computed(() =>
+    this.niveles().map((n) => ({ id: n.id, label: `${n.nombre} (${n.sigla || 'Sin sigla'})` })),
   );
   editingInstitucion = signal<Institucion | null>(null);
   submitted = signal(false);
   formErrors = signal<Record<string, string[]>>({});
-  
+
   formData: InstitucionFormInput = {
     nombre: '',
     localidad: '' as any,
@@ -238,14 +243,14 @@ export class InstitucionesPage implements OnInit {
       { key: 'cuise', label: 'CUISE', sortable: true, render: (item) => item['cuise'] || '-' },
       { key: 'nombre', label: 'Nombre', sortable: true },
       { key: 'localidad', label: 'Ciudad', sortable: true },
-      { 
-        key: 'nivel', 
-        label: 'Nivel', 
+      {
+        key: 'nivel',
+        label: 'Nivel',
         sortable: false,
-        render: (item: Institucion) => item.nivel?.nombre || 'Sin nivel'
-      }
+        render: (item: Institucion) => item.nivel?.nombre || 'Sin nivel',
+      },
     ],
-    searchFields: ['nombre', 'cuise', 'anexo']
+    searchFields: ['nombre', 'cuise', 'anexo'],
   };
 
   ngOnInit() {
@@ -265,7 +270,7 @@ export class InstitucionesPage implements OnInit {
   onModalOpened(item: Institucion | null) {
     this.submitted.set(false);
     this.formErrors.set({});
-    
+
     if (item) {
       this.editingInstitucion.set(item);
       this.formData = {
@@ -289,24 +294,27 @@ export class InstitucionesPage implements OnInit {
 
   onSave(crudTable: any) {
     this.submitted.set(true);
-    
+
     const result = InstitucionFormSchema.safeParse(this.formData);
 
     if (!result.success) {
       const flattened = result.error.flatten();
       this.formErrors.set(flattened.fieldErrors as Record<string, string[]>);
-      
+
       if (Object.keys(flattened.fieldErrors).length > 0) {
-        this.alertService.error('Error de validación', 'Por favor corregí los errores en el formulario');
+        this.alertService.error(
+          'Error de validación',
+          'Por favor corregí los errores en el formulario',
+        );
       }
       return;
     }
 
     this.formErrors.set({});
     this.saving.set(true);
-    
+
     const data = result.data;
-    
+
     const request = this.editingInstitucion()
       ? this.institucionesService.update(this.editingInstitucion()!.id, data)
       : this.institucionesService.create(data);
@@ -316,7 +324,7 @@ export class InstitucionesPage implements OnInit {
         this.saving.set(false);
         this.alertService.success(
           this.editingInstitucion() ? 'Institución actualizada' : 'Institución creada',
-          'Los cambios se guardaron correctamente'
+          'Los cambios se guardaron correctamente',
         );
         crudTable.closeModal();
         crudTable.reloadData();
@@ -325,7 +333,7 @@ export class InstitucionesPage implements OnInit {
         console.error('Error guardando institución:', err);
         this.saving.set(false);
         this.alertService.error('Error', 'No se pudieron guardar los cambios');
-      }
+      },
     });
   }
 
