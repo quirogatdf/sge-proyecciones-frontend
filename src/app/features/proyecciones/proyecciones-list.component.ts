@@ -12,6 +12,40 @@ import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
 import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
+import { Observable } from 'rxjs';
+
+// Servicio wrapper que transforma los datos para agregar campos de localidad y nombre de institución
+class ProyeccionesServiceWrapper {
+  constructor(private proyeccionesService: ProyeccionesService) {}
+
+  getAll() {
+    return new Observable<{ data: any }>(observer => {
+      this.proyeccionesService.getAll().subscribe({
+        next: (res: any) => {
+          // Transformar los datos para agregar campos calculados
+          const transformedData = res.data.map((proyeccion: any) => ({
+            ...proyeccion,
+            localidad: proyeccion.institucion?.localidad || '',
+            nombreInstitucion: proyeccion.institucion?.nombre || '',
+            cargoDisplay: proyeccion.cargo
+              ? `${proyeccion.cargo.codigo} - ${proyeccion.cargo.nombre}`
+              : 'N/A'
+          }));
+          observer.next({ data: transformedData });
+          observer.complete();
+        },
+        error: (err: any) => observer.error(err)
+      });
+    });
+  }
+}
+
+// Extendemos la interfaz Proyeccion para uso exclusivo en este componente
+interface ProyeccionConLocalidad extends Proyeccion {
+  localidad: string;
+  nombreInstitucion: string;
+  cargoDisplay: string;
+}
 
 interface SelectOption {
   id: string | number;
@@ -44,7 +78,7 @@ interface SelectOption {
       <app-crud-table
         #crudTable
         [config]="tableConfig"
-        [service]="proyeccionesService"
+        [service]="proyeccionesServiceWrapper"
         [saving]="saving"
         (modalOpened)="onModalOpened($event)"
         (save)="onSave(crudTable)"
@@ -538,6 +572,13 @@ export class ProyeccionesListComponent implements OnInit {
 
   @ViewChild('crudTable') crudTable?: any;
 
+  // Wrapper service para transformar datos
+  proyeccionesServiceWrapper!: ProyeccionesServiceWrapper;
+
+  constructor() {
+    this.proyeccionesServiceWrapper = new ProyeccionesServiceWrapper(this.proyeccionesService);
+  }
+
   saving = signal(false);
   niveles = signal<{ id: number; nombre: string }[]>([]);
   cargos = signal<Cargo[]>([]);
@@ -610,72 +651,84 @@ export class ProyeccionesListComponent implements OnInit {
     destino_nuevo: '',
   };
 
-    tableConfig: CrudTableConfig<Proyeccion> = {
-      title: 'Proyecciones',
-      pageSize: 25,
-      searchPlaceholder: 'Buscar proyecciones...',
-      showViewDetail: true,
-      columns: [
-        { key: 'id', label: 'ID', sortable: true },
-        {
-          key: 'id_nivel',
-          label: 'Nivel',
-          sortable: true,
-          render: (item: Proyeccion) => item.nivel?.nombre || 'N/A',
+  tableConfig: CrudTableConfig<ProyeccionConLocalidad> = {
+    title: 'Proyecciones',
+    pageSize: 25,
+    searchPlaceholder: 'Buscar proyecciones...',
+    showViewDetail: true,
+    columns: [
+      { key: 'id', label: 'ID', sortable: true },
+      {
+        key: 'id_nivel',
+        label: 'Nivel',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => item.nivel?.nombre || 'N/A',
+      },
+      {
+        key: 'localidad',
+        label: 'Localidad',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => item.localidad || 'N/A'
+      },
+      {
+        key: 'nombreInstitucion',
+        label: 'Institución',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => item.nombreInstitucion || 'N/A'
+      },
+      {
+        key: 'cargoDisplay',
+        label: 'Cargo',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => item.cargoDisplay || 'N/A'
+      },
+      {
+        key: 'año',
+        label: 'Año',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => {
+          const value = item['año'];
+          return value !== null && value !== undefined && value !== '' ? String(value) : '-';
+        }
+      },
+      {
+        key: 'orden',
+        label: 'Orden',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => {
+          const value = item.orden;
+          return value !== null && value !== undefined && value !== '' ? String(value) : '-';
+        }
+      },
+      {
+        key: 'estado',
+        label: 'Estado',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => {
+          const color =
+            item.estado === 'Autorizado'
+              ? '#22c55e'
+              : item.estado === 'Rechazado'
+                ? '#ef4444'
+                : '#f59e0b';
+          const bgColor =
+            item.estado === 'Autorizado'
+              ? 'rgba(34, 197, 94, 0.15)'
+              : item.estado === 'Rechazado'
+                ? 'rgba(239, 68, 68, 0.15)'
+                : 'rgba(245, 158, 11, 0.15)';
+          return `<span style="display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;text-align:center;white-space:nowrap;background-color:${bgColor};color:${color};">${item.estado}</span>`;
         },
-        { 
-          key: 'id_institucion', 
-          label: 'Institución', 
-          sortable: true,
-          render: (item: Proyeccion) => item.institucion?.nombre || 'N/A'
-        },
-{ 
-  key: 'año', 
-  label: 'Año', 
-  sortable: true,
-  render: (item: Proyeccion) => {
-    const value = item['año'];
-    return value !== null && value !== undefined && value !== '' ? String(value) : '-';
-  }
-},
-{ 
-  key: 'orden', 
-  label: 'Orden', 
-  sortable: true,
-  render: (item: Proyeccion) => {
-    const value = item.orden;
-    return value !== null && value !== undefined && value !== '' ? String(value) : '-';
-  }
-},
-        {
-          key: 'estado',
-          label: 'Estado',
-          sortable: true,
-          render: (item: Proyeccion) => {
-            const color =
-              item.estado === 'Autorizado'
-                ? '#22c55e'
-                : item.estado === 'Rechazado'
-                  ? '#ef4444'
-                  : '#f59e0b';
-            const bgColor =
-              item.estado === 'Autorizado'
-                ? 'rgba(34, 197, 94, 0.15)'
-                : item.estado === 'Rechazado'
-                  ? 'rgba(239, 68, 68, 0.15)'
-                  : 'rgba(245, 158, 11, 0.15)';
-            return `<span style="display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;font-weight:600;text-align:center;white-space:nowrap;background-color:${bgColor};color:${color};">${item.estado}</span>`;
-          },
-        },
-        { key: 'motivo', label: 'Motivo', sortable: true },
-        { key: 'resolucion_ministerial', label: 'Resolución Ministerial', sortable: true },
-        {
-          key: 'id_puesto',
-          label: 'ID Puesto',
-          sortable: true,
-          render: (item: Proyeccion) => item.id_puesto || '-',
-        },
-      ],
+      },
+      { key: 'motivo', label: 'Motivo', sortable: true },
+      { key: 'resolucion_ministerial', label: 'Resolución Ministerial', sortable: true },
+      {
+        key: 'id_puesto',
+        label: 'ID Puesto',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => item.id_puesto || '-',
+      },
+    ],
     // searchFields removed - now searches all columns including rendered content
   };
 
@@ -789,7 +842,8 @@ export class ProyeccionesListComponent implements OnInit {
         horar: item.horar !== null && item.horar !== undefined ? item.horar : null,
         cargos: item.cargos !== null && item.cargos !== undefined ? item.cargos : null,
         id_cargo: item.id_cargo !== null && item.id_cargo !== undefined ? item.id_cargo : null,
-        id_funcion: item.id_funcion !== null && item.id_funcion !== undefined ? item.id_funcion : null,
+        id_funcion:
+          item.id_funcion !== null && item.id_funcion !== undefined ? item.id_funcion : null,
         id_turno: item.id_turno !== null && item.id_turno !== undefined ? item.id_turno : null,
         resolucion_ministerial: item.resolucion_ministerial || '',
         resolucion_ministerial_ext: item.resolucion_ministerial_ext || '',
