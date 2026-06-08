@@ -737,6 +737,12 @@ export class ProyeccionesListComponent implements OnInit {
       { key: 'motivo', label: 'Motivo', sortable: true },
       { key: 'resolucion_ministerial', label: 'Resolución Ministerial', sortable: true },
       {
+        key: 'destino_nuevo',
+        label: 'Destino',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => item.destino_nuevo || '-',
+      },
+      {
         key: 'id_puesto',
         label: 'ID Puesto',
         sortable: true,
