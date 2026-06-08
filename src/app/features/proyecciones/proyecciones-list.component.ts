@@ -428,6 +428,8 @@ interface SelectOption {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        width: 100%;
+        max-width: 100%;
       }
 
       .page-header h1 {

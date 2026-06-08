@@ -169,10 +169,18 @@ import {
   `,
   styles: [
     `
+      :host {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+      }
+
       .page {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        width: 100%;
+        max-width: 100%;
       }
 
       .page-header {
@@ -251,11 +259,12 @@ import {
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        overflow: hidden;
+        overflow-x: auto;
+        max-width: 100%;
+        width: 100%;
       }
 
       .table {
-        width: 100%;
         border-collapse: collapse;
       }
 
@@ -263,6 +272,7 @@ import {
       .table td {
         padding: 0.75rem 1rem;
         text-align: start;
+        white-space: nowrap;
       }
 
       .table th {
