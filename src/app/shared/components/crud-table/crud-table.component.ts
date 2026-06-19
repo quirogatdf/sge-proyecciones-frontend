@@ -86,7 +86,11 @@ import {
           </thead>
           <tbody>
             @for (item of paginatedItems(); track item['id']) {
-              <tr>
+              <tr
+                [class.selected]="selectedId() === item['id']"
+                [style.cursor]="selectable !== false ? 'pointer' : undefined"
+                (click)="selectRow(item)"
+              >
                 @for (col of config.columns; track col.key) {
                   <td>
                     @if (col.render) {
@@ -96,7 +100,7 @@ import {
                     }
                   </td>
                 }
-                <td class="actions">
+                <td class="actions" (click)="$event.stopPropagation()">
                   @if (config.showViewDetail) {
                     <button class="btn-icon" (click)="onViewDetail(item['id'])">
                       <svg lucideEye [size]="16"></svg>
@@ -111,7 +115,7 @@ import {
                 </td>
               </tr>
             } @empty {
-              <tr>
+              <tr (click)="$event.stopPropagation()">
                 <td [attr.colspan]="config.columns.length + 1" class="empty">
                   No hay registros cargados
                 </td>
@@ -287,6 +291,22 @@ import {
         border-block-end: 1px solid var(--border);
       }
 
+      .table tbody tr {
+        transition: background-color 0.12s ease;
+      }
+
+      .table tbody tr:not(.selected):hover {
+        background: color-mix(in oklch, var(--accent) 30%, transparent);
+      }
+
+      .table tbody tr.selected {
+        background: color-mix(in oklch, var(--primary) 10%, transparent);
+      }
+
+      .table tbody tr.selected td:first-child {
+        box-shadow: inset 3px 0 0 0 var(--primary);
+      }
+
       .table .actions {
         display: flex;
         gap: 0.25rem;
@@ -426,7 +446,11 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   @Output() modalOpened = new EventEmitter<T | null>();
   @Output() save = new EventEmitter<T | null>();
   @Output() viewDetail = new EventEmitter<number>();
+  @Output() rowSelected = new EventEmitter<T | null>();
 
+  @Input() selectable?: boolean;
+
+  selectedId = signal<number | null>(null);
   items = signal<T[]>([]);
   showModal = signal(false);
   editingItem = signal<T | null>(null);
@@ -585,6 +609,18 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
 
   onViewDetail(id: number) {
     this.viewDetail.emit(id);
+  }
+
+  selectRow(item: T) {
+    if (this.selectable === false) return;
+
+    if (this.selectedId() === item['id']) {
+      this.selectedId.set(null);
+      this.rowSelected.emit(null);
+    } else {
+      this.selectedId.set(item['id']);
+      this.rowSelected.emit(item);
+    }
   }
 
   deleteItem(id: number) {
