@@ -189,6 +189,16 @@ export class ResolucionesPage {
       { key: 'nombre', label: 'Nombre', sortable: true },
       { key: 'año', label: 'Año', sortable: true },
       {
+        key: 'observacion',
+        label: 'Observación',
+        sortable: true,
+        render: (item) => item.observacion
+          ? item.observacion.length > 60
+            ? item.observacion.substring(0, 60) + '...'
+            : item.observacion
+          : '-'
+      },
+      {
         key: 'url',
         label: 'URL',
         sortable: true,
