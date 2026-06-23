@@ -41,6 +41,18 @@ export const routes: Routes = [
       import('./features/turnos/turno-detail.component').then((m) => m.TurnoDetailComponent),
   },
   {
+    path: 'resoluciones',
+    loadComponent: () =>
+      import('./features/resoluciones/resoluciones.page').then((m) => m.ResolucionesPage),
+  },
+  {
+    path: 'resoluciones/:id',
+    loadComponent: () =>
+      import('./features/resoluciones/resolucion-detail.component').then(
+        (m) => m.ResolucionDetailComponent,
+      ),
+  },
+  {
     path: 'funciones',
     loadComponent: () => import('./features/funciones/funciones.page').then((m) => m.FuncionesPage),
   },

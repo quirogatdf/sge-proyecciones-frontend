@@ -7,6 +7,7 @@ import {
   LucideClock,
   LucideUserSquare,
   LucideFileSpreadsheet,
+  LucideFileText,
   LucideHome,
 } from '@lucide/angular';
 
@@ -28,6 +29,7 @@ interface NavItem {
     LucideClock,
     LucideUserSquare,
     LucideFileSpreadsheet,
+    LucideFileText,
     LucideHome,
   ],
   template: `
@@ -60,6 +62,10 @@ interface NavItem {
         <a routerLink="/turnos" routerLinkActive="active" class="nav-item">
           <svg lucideClock [size]="20" class="nav-icon"></svg>
           <span class="nav-label">Turnos</span>
+        </a>
+        <a routerLink="/resoluciones" routerLinkActive="active" class="nav-item">
+          <svg lucideFileText [size]="20" class="nav-icon"></svg>
+          <span class="nav-label">Resoluciones</span>
         </a>
         <a routerLink="/funciones" routerLinkActive="active" class="nav-item">
           <svg lucideUserSquare [size]="20" class="nav-icon"></svg>
