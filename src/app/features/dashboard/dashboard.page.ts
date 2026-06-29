@@ -1,11 +1,12 @@
 import { Component, inject, signal, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DashboardService, CargosByYear, CargosByNivel, Institucion } from '../../core/services/dashboard.service';
+import { DashboardService, CargosByYear, CargosByNivel, Institucion, StatsByInstitucion } from '../../core/services/dashboard.service';
 import { ProyeccionesService, ProyeccionResponse } from '../../core/services/proyecciones.service';
 import { NivelesService, Nivel } from '../../core/services/niveles.service';
 import { CargosByYearChartComponent } from './components/cargos-by-year-chart.component';
 import { CargosByNivelChartComponent } from './components/cargos-by-nivel-chart.component';
+import { ProyeccionesByInstitucionChartComponent } from './components/proyecciones-by-institucion-chart.component';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -16,6 +17,7 @@ import { CargosByNivelChartComponent } from './components/cargos-by-nivel-chart.
     FormsModule,
     CargosByYearChartComponent,
     CargosByNivelChartComponent,
+    ProyeccionesByInstitucionChartComponent,
   ],
   template: `
     <div class="dashboard-container p-6 max-w-7xl mx-auto">
@@ -93,6 +95,56 @@ import { CargosByNivelChartComponent } from './components/cargos-by-nivel-chart.
             }
           </div>
         </div>
+
+        <!-- Chart 3: Proyecciones por Institución (full width) -->
+        <div class="chart-card mt-6">
+          <h2 class="text-lg font-semibold mb-4">Proyecciones por Institución</h2>
+
+          <!-- Filtros -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="stats-anio-select" class="block text-sm font-medium mb-2">
+                Filtrar por Año
+              </label>
+              <select
+                id="stats-anio-select"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white"
+                [ngModel]="statsSelectedAnio()"
+                (ngModelChange)="statsSelectedAnio.set($event)"
+              >
+                <option value="">-- Todos los años --</option>
+                @for (anio of years(); track anio) {
+                  <option [value]="anio">{{ anio }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label for="stats-institucion-select" class="block text-sm font-medium mb-2">
+                Filtrar por Institución
+              </label>
+              <select
+                id="stats-institucion-select"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white"
+                [ngModel]="statsSelectedInstitucionId()"
+                (ngModelChange)="statsSelectedInstitucionId.set($event)"
+              >
+                <option value="">-- Todas las instituciones --</option>
+                @for (inst of instituciones(); track inst.id) {
+                  <option [value]="inst.id">{{ inst.nombre }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          @if (statsByInstitucion().length > 0) {
+            <app-proyecciones-by-institucion-chart [stats]="statsByInstitucion()" />
+          } @else {
+            <div class="flex items-center justify-center h-48 text-gray-500">
+              <p>No hay datos disponibles para los filtros seleccionados</p>
+            </div>
+          }
+        </div>
       }
     </div>
   `,
@@ -127,12 +179,22 @@ export class DashboardPage {
   readonly cargosByNivel = signal<CargosByNivel>([]);
   readonly loading = signal(true);
 
+  // Signals for "Proyecciones por Institución" chart
+  readonly years = signal<string[]>([]);
+  readonly statsSelectedAnio = signal<string>(''); // Default: empty = all
+  readonly statsSelectedInstitucionId = signal<string>(''); // Default: empty = all
+  readonly statsByInstitucion = signal<StatsByInstitucion>([]);
+  readonly statsLoading = signal(false);
+  readonly statsYearsLoading = signal(false);
+
   constructor() {
     // Load initial data
     this.loadInstituciones();
     this.loadNiveles();
     this.loadCargosByNivel('');
     this.loadCargosByYear(''); // Load all by default
+    this.loadYears();
+    this.loadStatsByInstitucion(); // Load all by default
 
     // React to institution changes - only affects Cargos by Year
     effect(() => {
@@ -144,6 +206,13 @@ export class DashboardPage {
     effect(() => {
       const nivelId = this.selectedNivelId() || '';
       this.loadCargosByNivel(nivelId);
+    });
+
+    // React to año/institution changes for the new chart
+    effect(() => {
+      const anio = this.statsSelectedAnio();
+      const instId = this.statsSelectedInstitucionId() || '';
+      this.loadStatsByInstitucion(anio, instId);
     });
   }
 
@@ -203,6 +272,38 @@ export class DashboardPage {
       error: (err: unknown) => {
         console.error('Error loading cargos by nivel:', err);
         this.cargosByNivel.set([]);
+      },
+    });
+  }
+
+  private loadYears(): void {
+    this.statsYearsLoading.set(true);
+    // Extract distinct years from all proyecciones
+    this.proyeccionesService.getAll().subscribe({
+      next: (response) => {
+        const proyecciones = Array.isArray(response.data) ? response.data : [response.data];
+        const distinctYears = [...new Set(proyecciones.map(p => p.año).filter((y): y is string => !!y && y.trim() !== ''))];
+        this.years.set(distinctYears.sort((a, b) => parseInt(b) - parseInt(a))); // newest first
+        this.statsYearsLoading.set(false);
+      },
+      error: (err: unknown) => {
+        console.error('Error loading years:', err);
+        this.statsYearsLoading.set(false);
+      },
+    });
+  }
+
+  private loadStatsByInstitucion(anio: string = '', institucionId: string = ''): void {
+    this.statsLoading.set(true);
+    this.dashboardService.getStatsByInstitucion(anio, institucionId).subscribe({
+      next: (response) => {
+        this.statsByInstitucion.set(response.data);
+        this.statsLoading.set(false);
+      },
+      error: (err: unknown) => {
+        console.error('Error loading stats by institution:', err);
+        this.statsByInstitucion.set([]);
+        this.statsLoading.set(false);
       },
     });
   }

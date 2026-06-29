@@ -1,17 +1,21 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { ProyeccionesService, Proyeccion } from './proyecciones.service';
 import { InstitucionesService } from './instituciones.service';
-import { CargosByYear, CargosByNivel, Institucion, Instituciones } from '../schemas/dashboard.schema';
+import { CargosByYear, CargosByNivel, Institucion, Instituciones, StatsByInstitucion } from '../schemas/dashboard.schema';
 import { ProyeccionResponse } from './proyecciones.service';
+import { environment } from '../../../environments/environment';
 
 // Re-export types for use in components
-export type { CargosByYear, CargosByNivel, Institucion, Instituciones };
+export type { CargosByYear, CargosByNivel, Institucion, Instituciones, StatsByInstitucion };
 
 @Injectable({
   providedIn: 'root',
 })
 export class DashboardService {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiUrl}/api`;
   private readonly proyeccionesService = inject(ProyeccionesService);
   private readonly institucionesService = inject(InstitucionesService);
 
@@ -96,6 +100,21 @@ export class DashboardService {
         
         return { data };
       })
+    );
+  }
+
+  /**
+   * Get proyecciones stats grouped by institution.
+   * Optional filters: ?anio=XXXX &institucion_id=X
+   */
+  getStatsByInstitucion(anio: string = '', institucionId: string = ''): Observable<{ data: StatsByInstitucion }> {
+    const params = new URLSearchParams();
+    if (anio) params.set('anio', anio);
+    if (institucionId) params.set('institucion_id', institucionId);
+    const qs = params.toString();
+
+    return this.http.get<{ data: StatsByInstitucion }>(
+      `${this.baseUrl}/proyecciones/stats/by-institucion${qs ? '?' + qs : ''}`
     );
   }
 

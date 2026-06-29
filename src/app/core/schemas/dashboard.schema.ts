@@ -24,8 +24,21 @@ export const InstitucionSchema = z.object({
 
 export const InstitucionesSchema = z.array(InstitucionSchema);
 
+// Schema for proyecciones by institution stats
+export const StatsByInstitucionSchema = z.array(
+  z.object({
+    institucion_id: z.number(),
+    institucion: z.string(),
+    creacion_no_h: z.number(),
+    creacion_horas_h: z.number(),
+    continuidad_no_h: z.number(),
+    continuidad_horas_h: z.number(),
+  })
+);
+
 // Type exports
 export type CargosByYear = z.infer<typeof CargosByYearSchema>;
 export type CargosByNivel = z.infer<typeof CargosByNivelSchema>;
 export type Institucion = z.infer<typeof InstitucionSchema>;
 export type Instituciones = z.infer<typeof InstitucionesSchema>;
+export type StatsByInstitucion = z.infer<typeof StatsByInstitucionSchema>;
