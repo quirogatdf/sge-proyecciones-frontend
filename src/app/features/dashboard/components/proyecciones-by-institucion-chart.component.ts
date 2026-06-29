@@ -69,33 +69,39 @@ export class ProyeccionesByInstitucionChartComponent {
 
     const labels = data.map((item) => item.institucion);
 
+    // Totales para mostrar en leyendas
+    const totalCreacionCargos = data.reduce((sum, item) => sum + item.creacion_no_h, 0);
+    const totalCreacionHoras = data.reduce((sum, item) => sum + item.creacion_horas_h, 0);
+    const totalContinuidadCargos = data.reduce((sum, item) => sum + item.continuidad_no_h, 0);
+    const totalContinuidadHoras = data.reduce((sum, item) => sum + item.continuidad_horas_h, 0);
+
     const config: ChartConfig = {
       type: 'bar',
       labels,
       datasets: [
         {
-          label: 'Creación - Cargos',
+          label: `Creación - Cargos (${totalCreacionCargos})`,
           data: data.map((item) => item.creacion_no_h),
           backgroundColor: 'rgba(59, 130, 246, 0.7)',
           borderColor: 'rgba(59, 130, 246, 1)',
           borderWidth: 1,
         },
         {
-          label: 'Creación - Horas',
+          label: `Creación - Horas (${totalCreacionHoras})`,
           data: data.map((item) => item.creacion_horas_h),
           backgroundColor: 'rgba(59, 130, 246, 0.3)',
           borderColor: 'rgba(59, 130, 246, 1)',
           borderWidth: 1,
         },
         {
-          label: 'Continuidad - Cargos',
+          label: `Continuidad - Cargos (${totalContinuidadCargos})`,
           data: data.map((item) => item.continuidad_no_h),
           backgroundColor: 'rgba(249, 115, 22, 0.7)',
           borderColor: 'rgba(249, 115, 22, 1)',
           borderWidth: 1,
         },
         {
-          label: 'Continuidad - Horas',
+          label: `Continuidad - Horas (${totalContinuidadHoras})`,
           data: data.map((item) => item.continuidad_horas_h),
           backgroundColor: 'rgba(249, 115, 22, 0.3)',
           borderColor: 'rgba(249, 115, 22, 1)',
