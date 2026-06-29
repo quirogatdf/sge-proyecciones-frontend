@@ -63,7 +63,7 @@ export class ProyeccionesByInstitucionChartComponent {
       labels,
       datasets: [
         {
-          label: 'Creación - No H',
+          label: 'Creación - Cargos',
           data: data.map(item => item.creacion_no_h),
           backgroundColor: 'rgba(59, 130, 246, 0.7)',
           borderColor: 'rgba(59, 130, 246, 1)',
@@ -77,7 +77,7 @@ export class ProyeccionesByInstitucionChartComponent {
           borderWidth: 1,
         },
         {
-          label: 'Continuidad - No H',
+          label: 'Continuidad - Cargos',
           data: data.map(item => item.continuidad_no_h),
           backgroundColor: 'rgba(249, 115, 22, 0.7)',
           borderColor: 'rgba(249, 115, 22, 1)',
