@@ -16,10 +16,11 @@ export const CargosByNivelSchema = z.array(
   })
 );
 
-// Schema for instituciones response (basic, for selector)
+// Schema for instituciones response (for selector)
 export const InstitucionSchema = z.object({
   id: z.string(),
   nombre: z.string(),
+  cuise: z.string().nullable().optional(),
 });
 
 export const InstitucionesSchema = z.array(InstitucionSchema);

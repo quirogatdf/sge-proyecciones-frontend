@@ -133,6 +133,7 @@ export class DashboardService {
           data: instituciones.map(i => ({
             id: i.id?.toString() || '',
             nombre: i.nombre || 'Sin nombre',
+            cuise: i.cuise || null,
           }))
         };
       })

@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService, CargosByYear, CargosByNivel, Institucion, StatsByInstitucion } from '../../core/services/dashboard.service';
@@ -7,6 +7,7 @@ import { NivelesService, Nivel } from '../../core/services/niveles.service';
 import { CargosByYearChartComponent } from './components/cargos-by-year-chart.component';
 import { CargosByNivelChartComponent } from './components/cargos-by-nivel-chart.component';
 import { ProyeccionesByInstitucionChartComponent } from './components/proyecciones-by-institucion-chart.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -18,6 +19,7 @@ import { ProyeccionesByInstitucionChartComponent } from './components/proyeccion
     CargosByYearChartComponent,
     CargosByNivelChartComponent,
     ProyeccionesByInstitucionChartComponent,
+    SearchableSelectComponent,
   ],
   template: `
     <div class="dashboard-container p-6 max-w-7xl mx-auto">
@@ -120,20 +122,14 @@ import { ProyeccionesByInstitucionChartComponent } from './components/proyeccion
             </div>
 
             <div>
-              <label for="stats-institucion-select" class="block text-sm font-medium mb-2">
+              <label class="block text-sm font-medium mb-2">
                 Filtrar por Institución
               </label>
-              <select
-                id="stats-institucion-select"
-                class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white"
-                [ngModel]="statsSelectedInstitucionId()"
-                (ngModelChange)="statsSelectedInstitucionId.set($event)"
-              >
-                <option value="">-- Todas las instituciones --</option>
-                @for (inst of instituciones(); track inst.id) {
-                  <option [value]="inst.id">{{ inst.nombre }}</option>
-                }
-              </select>
+              <app-searchable-select
+                [options]="statsInstitucionOptions()"
+                placeholder="Buscar institución por nombre o CUISE..."
+                [(value)]="statsSelectedInstitucionId"
+              />
             </div>
           </div>
 
@@ -182,10 +178,18 @@ export class DashboardPage {
   // Signals for "Proyecciones por Institución" chart
   readonly years = signal<string[]>([]);
   readonly statsSelectedAnio = signal<string>(''); // Default: empty = all
-  readonly statsSelectedInstitucionId = signal<string>(''); // Default: empty = all
+  readonly statsSelectedInstitucionId = signal<string>(''); // Default: empty = all years
   readonly statsByInstitucion = signal<StatsByInstitucion>([]);
   readonly statsLoading = signal(false);
   readonly statsYearsLoading = signal(false);
+
+  // Options for the searchable institution select
+  readonly statsInstitucionOptions = computed(() =>
+    this.instituciones().map(inst => ({
+      id: inst.id,
+      label: inst.cuise ? `${inst.nombre}  (${inst.cuise})` : inst.nombre,
+    }))
+  );
 
   constructor() {
     // Load initial data
@@ -194,7 +198,6 @@ export class DashboardPage {
     this.loadCargosByNivel('');
     this.loadCargosByYear(''); // Load all by default
     this.loadYears();
-    this.loadStatsByInstitucion(); // Load all by default
 
     // React to institution changes - only affects Cargos by Year
     effect(() => {
@@ -230,6 +233,12 @@ export class DashboardPage {
     this.dashboardService.getInstituciones().subscribe({
       next: (response) => {
         this.instituciones.set(response.data);
+
+        // Default to first institution for the new chart
+        const data = response.data;
+        if (data.length > 0 && !this.statsSelectedInstitucionId()) {
+          this.statsSelectedInstitucionId.set(data[0].id);
+        }
       },
       error: (err: unknown) => {
         console.error('Error loading instituciones:', err);
