@@ -45,6 +45,10 @@ class ProyeccionesServiceWrapper {
       });
     });
   }
+
+  delete(id: number) {
+    return this.proyeccionesService.delete(id);
+  }
 }
 
 // Extendemos la interfaz Proyeccion para uso exclusivo en este componente
