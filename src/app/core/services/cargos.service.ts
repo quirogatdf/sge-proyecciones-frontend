@@ -31,11 +31,11 @@ export class CargosService {
     return this.http.get<CargoResponse>(`${this.getApiUrl('cargos')}/${id}`);
   }
 
-  create(data: { codigo: string; nombre: string; descripcion?: string | null }): Observable<CargoResponse> {
+  create(data: { codigo: string; nombre: string; descripcion?: string | null; tipo?: string | null }): Observable<CargoResponse> {
     return this.http.post<CargoResponse>(this.getApiUrl('cargos'), data);
   }
 
-  update(id: number, data: { codigo: string; nombre: string; descripcion?: string | null }): Observable<CargoResponse> {
+  update(id: number, data: { codigo: string; nombre: string; descripcion?: string | null; tipo?: string | null }): Observable<CargoResponse> {
     return this.http.put<CargoResponse>(`${this.getApiUrl('cargos')}/${id}`, data);
   }
 

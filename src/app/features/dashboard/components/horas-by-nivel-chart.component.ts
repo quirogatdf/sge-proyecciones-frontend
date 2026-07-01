@@ -1,9 +1,9 @@
 import { Component, input, effect, ElementRef, viewChild, ChangeDetectionStrategy, inject, DestroyRef } from '@angular/core';
 import { Chart, ChartConfig } from '../../../core/utils/chart';
-import { CargosByNivel } from '../../../core/services/dashboard.service';
+import { HorasByNivel } from '../../../core/services/dashboard.service';
 
 @Component({
-  selector: 'app-cargos-by-nivel-chart',
+  selector: 'app-horas-by-nivel-chart',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -26,17 +26,17 @@ import { CargosByNivel } from '../../../core/services/dashboard.service';
     }
   `],
 })
-export class CargosByNivelChartComponent {
+export class HorasByNivelChartComponent {
   private readonly destroyRef = inject(DestroyRef);
-  readonly cargosByNivel = input.required<CargosByNivel>();
-  readonly chartId = input<string>('cargos-by-nivel-chart');
+  readonly horasByNivel = input.required<HorasByNivel>();
+  readonly chartId = input<string>('horas-by-nivel-chart');
 
   private chartInstance: Chart | null = null;
   private canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('chartCanvas');
 
   constructor() {
     effect(() => {
-      const data = this.cargosByNivel();
+      const data = this.horasByNivel();
       if (data && data.length > 0) {
         this.renderChart(data);
       } else {
@@ -50,7 +50,7 @@ export class CargosByNivelChartComponent {
     });
   }
 
-  private renderChart(data: CargosByNivel): void {
+  private renderChart(data: HorasByNivel): void {
     this.destroyChart();
 
     const canvas = this.canvas().nativeElement;
@@ -59,7 +59,7 @@ export class CargosByNivelChartComponent {
 
     // Generate colors for bars
     const backgroundColors = [
-      'rgba(59, 130, 246, 0.5)',
+      'rgba(16, 185, 129, 0.5)',
       'rgba(239, 68, 68, 0.5)',
       'rgba(34, 197, 94, 0.5)',
       'rgba(234, 179, 8, 0.5)',
@@ -67,7 +67,7 @@ export class CargosByNivelChartComponent {
     ];
 
     const borderColors = [
-      'rgba(59, 130, 246, 1)',
+      'rgba(16, 185, 129, 1)',
       'rgba(239, 68, 68, 1)',
       'rgba(34, 197, 94, 1)',
       'rgba(234, 179, 8, 1)',
@@ -79,14 +79,14 @@ export class CargosByNivelChartComponent {
       labels: data.map(item => item.nivel_nombre),
       datasets: [
         {
-          label: 'Cargos',
-          data: data.map(item => item.count),
+          label: 'Horas',
+          data: data.map(item => item.totalHoras),
           backgroundColor: backgroundColors.slice(0, data.length),
           borderColor: borderColors.slice(0, data.length),
           borderWidth: 1,
         },
       ],
-      title: 'Cargos por Nivel',
+      title: 'Horas por Nivel',
     };
 
     this.chartInstance = new Chart(ctx, {
@@ -116,9 +116,6 @@ export class CargosByNivelChartComponent {
         scales: {
           y: {
             beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-            },
           },
         },
       },

@@ -11,12 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
     <div class="page">
       <header class="page-header">
         <div class="header-actions">
-          <button 
-            class="btn btn-secondary" 
-            (click)="volverLista()"
-          >
-            ← Volver a la lista
-          </button>
+          <button class="btn btn-secondary" (click)="volverLista()">← Volver a la lista</button>
         </div>
         <h1>Detalle de Cargo</h1>
       </header>
@@ -29,22 +24,12 @@ import { ActivatedRoute, Router } from '@angular/router';
       } @else if (error()) {
         <div class="error-container">
           <p class="error-message">{{ errorMessage() }}</p>
-          <button 
-            class="btn btn-secondary" 
-            (click)="reload()"
-          >
-            Intentar nuevamente
-          </button>
+          <button class="btn btn-secondary" (click)="reload()">Intentar nuevamente</button>
         </div>
       } @else if (!cargo()) {
         <div class="empty-container">
           <p>Cargo no encontrado</p>
-          <button 
-            class="btn btn-secondary" 
-            (click)="volverLista()"
-          >
-            Volver a la lista
-          </button>
+          <button class="btn btn-secondary" (click)="volverLista()">Volver a la lista</button>
         </div>
       } @else {
         <div class="detail-content">
@@ -67,6 +52,12 @@ import { ActivatedRoute, Router } from '@angular/router';
                 <label>Descripción:</label>
                 <span>{{ cargo()?.descripcion || 'Sin descripción' }}</span>
               </div>
+              <div class="detail-item">
+                <label>Tipo:</label>
+                <span>
+                  {{ cargo()?.tipo }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -87,140 +78,144 @@ import { ActivatedRoute, Router } from '@angular/router';
       }
     </div>
   `,
-  styles: [`
-    .page {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
+  styles: [
+    `
+      .page {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
 
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
 
-    .page-header h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--foreground);
-      margin: 0;
-    }
+      .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin: 0;
+      }
 
-    .header-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
+      .header-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
 
-    .loading-container,
-    .error-container,
-    .empty-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem;
-      text-align: center;
-    }
+      .loading-container,
+      .error-container,
+      .empty-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        text-align: center;
+      }
 
-    .loading-spinner {
-      width: 3rem;
-      height: 3rem;
-      border: 3px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 1s ease-in-out infinite;
-      margin-bottom: 1rem;
-    }
+      .loading-spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 3px solid var(--border);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 1rem;
+      }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-    .error-message {
-      color: var(--destructive);
-      margin-bottom: 1.5rem;
-    }
+      .error-message {
+        color: var(--destructive);
+        margin-bottom: 1.5rem;
+      }
 
-    .detail-content {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
+      .detail-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
 
-    .detail-section {
-      padding: 1.5rem;
-      border-block-end: 1px solid var(--border);
-    }
+      .detail-section {
+        padding: 1.5rem;
+        border-block-end: 1px solid var(--border);
+      }
 
-    .detail-section:last-child {
-      border-block-end: none;
-    }
+      .detail-section:last-child {
+        border-block-end: none;
+      }
 
-    .detail-section h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--foreground);
-      margin: 0 0 1rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+      .detail-section h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
 
-    .detail-section h2::before {
-      content: "";
-      width: 4px;
-      height: 24px;
-      background: var(--primary);
-      border-radius: 2px;
-    }
+      .detail-section h2::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: var(--primary);
+        border-radius: 2px;
+      }
 
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1rem;
-    }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+      }
 
-    .detail-item {
-      display: flex;
-      flex-direction: column;
-    }
+      .detail-item {
+        display: flex;
+        flex-direction: column;
+      }
 
-    .detail-item label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--muted-foreground);
-      margin-bottom: 0.25rem;
-    }
+      .detail-item label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--muted-foreground);
+        margin-bottom: 0.25rem;
+      }
 
-    .detail-item span {
-      font-size: 0.875rem;
-      color: var(--foreground);
-    }
+      .detail-item span {
+        font-size: 0.875rem;
+        color: var(--foreground);
+      }
 
-    .btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--foreground);
-      background: var(--surface);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--foreground);
+        background: var(--surface);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
 
-    .btn-secondary:hover {
-      background: var(--accent);
-      color: var(--foreground);
-    }
-  `]
+      .btn-secondary:hover {
+        background: var(--accent);
+        color: var(--foreground);
+      }
+    `,
+  ],
 })
 export class CargoDetailComponent {
   private readonly cargosService = inject(CargosService);
@@ -263,7 +258,7 @@ export class CargoDetailComponent {
         this.error.set(true);
         this.errorMessage.set('No se pudo cargar el detalle del cargo');
         this.loading.set(false);
-      }
+      },
     });
   }
 

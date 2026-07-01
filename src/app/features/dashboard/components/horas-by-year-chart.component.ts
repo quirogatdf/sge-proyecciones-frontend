@@ -1,9 +1,9 @@
 import { Component, input, effect, ElementRef, viewChild, ChangeDetectionStrategy, inject, DestroyRef } from '@angular/core';
 import { Chart, ChartConfig } from '../../../core/utils/chart';
-import { CargosByNivel } from '../../../core/services/dashboard.service';
+import { HorasByYear } from '../../../core/services/dashboard.service';
 
 @Component({
-  selector: 'app-cargos-by-nivel-chart',
+  selector: 'app-horas-by-year-chart',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -26,17 +26,17 @@ import { CargosByNivel } from '../../../core/services/dashboard.service';
     }
   `],
 })
-export class CargosByNivelChartComponent {
+export class HorasByYearChartComponent {
   private readonly destroyRef = inject(DestroyRef);
-  readonly cargosByNivel = input.required<CargosByNivel>();
-  readonly chartId = input<string>('cargos-by-nivel-chart');
+  readonly horasByYear = input.required<HorasByYear>();
+  readonly chartId = input<string>('horas-by-year-chart');
 
   private chartInstance: Chart | null = null;
   private canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('chartCanvas');
 
   constructor() {
     effect(() => {
-      const data = this.cargosByNivel();
+      const data = this.horasByYear();
       if (data && data.length > 0) {
         this.renderChart(data);
       } else {
@@ -50,43 +50,26 @@ export class CargosByNivelChartComponent {
     });
   }
 
-  private renderChart(data: CargosByNivel): void {
+  private renderChart(data: HorasByYear): void {
     this.destroyChart();
 
     const canvas = this.canvas().nativeElement;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Generate colors for bars
-    const backgroundColors = [
-      'rgba(59, 130, 246, 0.5)',
-      'rgba(239, 68, 68, 0.5)',
-      'rgba(34, 197, 94, 0.5)',
-      'rgba(234, 179, 8, 0.5)',
-      'rgba(168, 85, 247, 0.5)',
-    ];
-
-    const borderColors = [
-      'rgba(59, 130, 246, 1)',
-      'rgba(239, 68, 68, 1)',
-      'rgba(34, 197, 94, 1)',
-      'rgba(234, 179, 8, 1)',
-      'rgba(168, 85, 247, 1)',
-    ];
-
     const config: ChartConfig = {
       type: 'bar',
-      labels: data.map(item => item.nivel_nombre),
+      labels: data.map((item: { year: number; totalHoras: number }) => item.year.toString()),
       datasets: [
         {
-          label: 'Cargos',
-          data: data.map(item => item.count),
-          backgroundColor: backgroundColors.slice(0, data.length),
-          borderColor: borderColors.slice(0, data.length),
+          label: 'Horas',
+          data: data.map((item: { year: number; totalHoras: number }) => item.totalHoras),
+          backgroundColor: 'rgba(16, 185, 129, 0.5)',
+          borderColor: 'rgba(16, 185, 129, 1)',
           borderWidth: 1,
         },
       ],
-      title: 'Cargos por Nivel',
+      title: 'Horas por Año',
     };
 
     this.chartInstance = new Chart(ctx, {
@@ -116,9 +99,6 @@ export class CargosByNivelChartComponent {
         scales: {
           y: {
             beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-            },
           },
         },
       },

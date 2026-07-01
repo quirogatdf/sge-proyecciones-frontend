@@ -37,9 +37,27 @@ export const StatsByInstitucionSchema = z.array(
   })
 );
 
+// Schema for horas by year response: [{ year: number, totalHoras: number }]
+export const HorasByYearSchema = z.array(
+  z.object({
+    year: z.number(),
+    totalHoras: z.number(),
+  })
+);
+
+// Schema for horas by nivel response: [{ nivel_nombre: string, totalHoras: number }]
+export const HorasByNivelSchema = z.array(
+  z.object({
+    nivel_nombre: z.string(),
+    totalHoras: z.number(),
+  })
+);
+
 // Type exports
 export type CargosByYear = z.infer<typeof CargosByYearSchema>;
 export type CargosByNivel = z.infer<typeof CargosByNivelSchema>;
+export type HorasByYear = z.infer<typeof HorasByYearSchema>;
+export type HorasByNivel = z.infer<typeof HorasByNivelSchema>;
 export type Institucion = z.infer<typeof InstitucionSchema>;
 export type Instituciones = z.infer<typeof InstitucionesSchema>;
 export type StatsByInstitucion = z.infer<typeof StatsByInstitucionSchema>;

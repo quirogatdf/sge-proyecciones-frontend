@@ -35,6 +35,7 @@ export interface Proyeccion {
     id: number;
     nombre: string;
     codigo: string;
+    tipo?: string | null;
   };
   funcion?: {
     id: number;
