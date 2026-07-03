@@ -1,12 +1,15 @@
-<div class="app-layout">
-  <app-sidebar />
-  <main class="main-content">
-    @defer {
+@if (!authService.ready()) {
+  <div class="loading-screen">
+    <div class="spinner"></div>
+    <p>Verificando sesión...</p>
+  </div>
+} @else if (authService.isAuthenticated()) {
+  <div class="app-layout">
+    <app-sidebar />
+    <main class="main-content">
       <router-outlet />
-    } @placeholder {
-      <div class="loading">Cargando...</div>
-    } @loading {
-      <div class="loading">Cargando...</div>
-    }
-  </main>
-</div>
+    </main>
+  </div>
+} @else {
+  <router-outlet />
+}

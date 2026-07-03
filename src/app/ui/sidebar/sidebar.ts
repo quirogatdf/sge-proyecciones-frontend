@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideLayoutGrid,
@@ -9,13 +9,11 @@ import {
   LucideFileSpreadsheet,
   LucideFileText,
   LucideHome,
+  LucideLogOut,
+  LucideUser,
+  LucideShieldCheck,
 } from '@lucide/angular';
-
-interface NavItem {
-  label: string;
-  route: string;
-  icon: typeof LucideLayoutGrid;
-}
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -31,6 +29,9 @@ interface NavItem {
     LucideFileSpreadsheet,
     LucideFileText,
     LucideHome,
+    LucideLogOut,
+    LucideUser,
+    LucideShieldCheck,
   ],
   template: `
     <aside class="sidebar">
@@ -69,13 +70,37 @@ interface NavItem {
         </a>
         <a routerLink="/funciones" routerLinkActive="active" class="nav-item">
           <svg lucideUserSquare [size]="20" class="nav-icon"></svg>
-          <span class="nav-label">Funcion/Perfil</span>
+          <span class="nav-label">Función/Perfil</span>
         </a>
       </nav>
+
+      <!-- User info & logout -->
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">
+            <svg lucideUser [size]="18"></svg>
+          </div>
+          <div class="user-details">
+            <span class="user-name">{{ authService.user()?.name }}</span>
+            <span class="user-role">
+              <svg lucideShieldCheck [size]="12"></svg>
+              {{ authService.user()?.role === 'admin' ? 'Administrador' : 'Invitado' }}
+            </span>
+          </div>
+        </div>
+        <button class="logout-btn" (click)="onLogout()">
+          <svg lucideLogOut [size]="18"></svg>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
     </aside>
   `,
   styles: [
     `
+      :host {
+        display: contents;
+      }
+
       .sidebar {
         width: 260px;
         height: 100vh;
@@ -103,6 +128,9 @@ interface NavItem {
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
+        flex: 1;
+        overflow-y: auto;
+        padding-block: 0.5rem;
       }
 
       .nav-item {
@@ -136,7 +164,87 @@ interface NavItem {
         font-size: 0.875rem;
         font-weight: 500;
       }
+
+      /* Footer */
+      .sidebar-footer {
+        border-block-start: 1px solid var(--border);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted-foreground);
+        flex-shrink: 0;
+      }
+
+      .user-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        min-width: 0;
+      }
+
+      .user-name {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--foreground);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .user-role {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+        text-transform: capitalize;
+      }
+
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--muted-foreground);
+        font-size: 0.8125rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .logout-btn:hover {
+        background: color-mix(in oklch, var(--destructive) 10%, transparent);
+        border-color: color-mix(in oklch, var(--destructive) 30%, transparent);
+        color: var(--destructive);
+      }
     `,
   ],
 })
-export class Sidebar {}
+export class Sidebar {
+  readonly authService = inject(AuthService);
+
+  async onLogout(): Promise<void> {
+    await this.authService.logout();
+  }
+}

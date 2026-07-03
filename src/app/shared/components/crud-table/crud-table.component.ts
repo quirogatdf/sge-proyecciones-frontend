@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ColumnConfig, CrudService, CrudTableConfig } from '../../interfaces/crud-config.interface';
 import { AlertService } from '../../../core/services/alert.service';
+import { AuthService } from '../../../core/services/auth.service';
 import {
   LucidePlus,
   LucidePencil,
@@ -43,10 +44,12 @@ import {
     <div class="page">
       <header class="page-header">
         <h1>{{ config.title }}</h1>
-        <button class="btn btn-primary" (click)="openModal()">
-          <svg lucidePlus [size]="18"></svg>
-          Nuevo
-        </button>
+        @if (authService.isAdmin()) {
+          <button class="btn btn-primary" (click)="openModal()">
+            <svg lucidePlus [size]="18"></svg>
+            Nuevo
+          </button>
+        }
       </header>
 
       <div class="table-container">
@@ -106,12 +109,14 @@ import {
                       <svg lucideEye [size]="16"></svg>
                     </button>
                   }
-                  <button class="btn-icon" (click)="openModal(item)">
-                    <svg lucidePencil [size]="16"></svg>
-                  </button>
-                  <button class="btn-icon btn-danger" (click)="deleteItem(item['id'])">
-                    <svg lucideTrash2 [size]="16"></svg>
-                  </button>
+                  @if (authService.isAdmin()) {
+                    <button class="btn-icon" (click)="openModal(item)">
+                      <svg lucidePencil [size]="16"></svg>
+                    </button>
+                    <button class="btn-icon btn-danger" (click)="deleteItem(item['id'])">
+                      <svg lucideTrash2 [size]="16"></svg>
+                    </button>
+                  }
                 </td>
               </tr>
             } @empty {
@@ -439,6 +444,7 @@ import {
 export class CrudTableComponent<T extends { id: number }> implements OnInit {
   private readonly alertService = inject(AlertService);
   private readonly sanitizer = inject(DomSanitizer);
+  readonly authService = inject(AuthService);
 
   @Input({ required: true }) config!: CrudTableConfig<T>;
   @Input({ required: true }) service!: any;
