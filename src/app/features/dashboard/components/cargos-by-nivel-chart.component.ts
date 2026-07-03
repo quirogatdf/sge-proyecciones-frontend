@@ -116,9 +116,6 @@ export class CargosByNivelChartComponent {
         scales: {
           y: {
             beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-            },
           },
         },
       },
