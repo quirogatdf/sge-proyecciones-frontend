@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Proyeccion } from '../../shared/models/proyeccion';
 import { environment } from '../../../environments/environment';
@@ -10,6 +10,23 @@ export type { Proyeccion };
 export interface ProyeccionResponse {
   data: Proyeccion | Proyeccion[];
   message?: string;
+}
+
+export interface PaginatedProyeccionResponse {
+  data: Proyeccion[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
+export interface ProyeccionQueryParams {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  id_nivel?: number | null;
 }
 
 @Injectable({
@@ -26,15 +43,19 @@ export class ProyeccionesService {
     return `${this.baseUrl}/${endpoint}`;
   }
 
-   getAll(): Observable<ProyeccionResponse> {
-     const nivelId = this.selectedNivelId();
-     
-     if (nivelId) {
-       return this.http.get<ProyeccionResponse>(this.getApiUrl(`proyecciones/nivel/${nivelId}?include=institucion,cargo`));
-     }
-     
-     return this.http.get<ProyeccionResponse>(this.getApiUrl('proyecciones?include=institucion,cargo'));
-   }
+  getAll(params?: ProyeccionQueryParams): Observable<PaginatedProyeccionResponse> {
+    let httpParams = new HttpParams();
+    
+    if (params?.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params?.per_page) httpParams = httpParams.set('per_page', params.per_page.toString());
+    if (params?.search) httpParams = httpParams.set('search', params.search);
+    if (params?.id_nivel) httpParams = httpParams.set('id_nivel', params.id_nivel.toString());
+    
+    return this.http.get<PaginatedProyeccionResponse>(
+      this.getApiUrl('proyecciones'),
+      { params: httpParams }
+    );
+  }
 
   setNivelFiltro(nivelId: number | null): void {
     this.selectedNivelId.set(nivelId);
@@ -58,11 +79,20 @@ export class ProyeccionesService {
 
   /**
    * Get proyecciones filtered by institucion ID
-   * Backend may support query param: /api/proyecciones?institucion_id=X
    */
   getByInstitucion(institucionId: string | number): Observable<ProyeccionResponse> {
     return this.http.get<ProyeccionResponse>(
       `${this.getApiUrl('proyecciones')}?institucion_id=${institucionId}`
+    );
+  }
+
+  /**
+   * Get all proyecciones without pagination (for dashboard aggregation)
+   * This loads ALL records - use only for dashboard charts that need full data
+   */
+  getAllForDashboard(): Observable<ProyeccionResponse> {
+    return this.http.get<ProyeccionResponse>(
+      this.getApiUrl('proyecciones?per_page=9999')
     );
   }
 

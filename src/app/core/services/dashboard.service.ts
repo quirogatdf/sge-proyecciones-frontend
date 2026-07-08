@@ -19,13 +19,13 @@ export class DashboardService {
   private readonly proyeccionesService = inject(ProyeccionesService);
   private readonly institucionesService = inject(InstitucionesService);
 
-/**
+  /**
    * Get cargos count by year for a specific institution
    * Aggregates data from Proyeccion table client-side
    * Note: Filters client-side since backend may not support ?institucion_id=X
    */
   getCargosByYear(institucionId: string): Observable<{ data: CargosByYear }> {
-    return this.proyeccionesService.getAll().pipe(
+    return this.proyeccionesService.getAllForDashboard().pipe(
       map((response: ProyeccionResponse) => {
         const proyecciones = Array.isArray(response.data) 
           ? response.data 
@@ -69,7 +69,7 @@ export class DashboardService {
    * Aggregates data from Proyeccion table client-side
    */
   getCargosByNivel(anio: string = ''): Observable<{ data: CargosByNivel }> {
-    return this.proyeccionesService.getAll().pipe(
+    return this.proyeccionesService.getAllForDashboard().pipe(
       map((response: ProyeccionResponse) => {
         const proyecciones = Array.isArray(response.data) 
           ? response.data 
@@ -106,7 +106,7 @@ export class DashboardService {
    * Aggregates data from Proyeccion table client-side
    */
   getHorasByYear(institucionId: string): Observable<{ data: HorasByYear }> {
-    return this.proyeccionesService.getAll().pipe(
+    return this.proyeccionesService.getAllForDashboard().pipe(
       map((response: ProyeccionResponse) => {
         const proyecciones = Array.isArray(response.data) 
           ? response.data 
@@ -150,7 +150,7 @@ export class DashboardService {
    * Aggregates data from Proyeccion table client-side
    */
   getHorasByNivel(anio: string = ''): Observable<{ data: HorasByNivel }> {
-    return this.proyeccionesService.getAll().pipe(
+    return this.proyeccionesService.getAllForDashboard().pipe(
       map((response: ProyeccionResponse) => {
         const proyecciones = Array.isArray(response.data) 
           ? response.data 

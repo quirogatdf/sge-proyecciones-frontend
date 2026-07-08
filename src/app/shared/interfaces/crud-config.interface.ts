@@ -17,8 +17,7 @@ export interface ColumnConfig<T = Record<string, unknown>> {
 }
 
 /**
- * Interfaz que debe implementar el servicio CRUD
- * Esto asegura que cualquier servicio sea compatible con CrudTableComponent
+ * Interfaz que debe implementar el servicio CRUD para client-side
  */
 export interface CrudService<T, CreateInput = Partial<T>, UpdateInput = Partial<T>> {
   getAll(): { subscribe: (callbacks: { 
@@ -44,6 +43,30 @@ export interface CrudService<T, CreateInput = Partial<T>, UpdateInput = Partial<
 }
 
 /**
+ * Interfaz para servicios con paginación server-side
+ */
+export interface ServerSideCrudService<T> {
+  getAll(params: {
+    page?: number;
+    per_page?: number;
+    search?: string;
+    [key: string]: unknown;
+  }): { subscribe: (callbacks: {
+    next: (res: { data: T[]; meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+    } }) => void;
+    error?: (err: unknown) => void;
+  }) => void };
+  delete(id: number): { subscribe: (callbacks: {
+    next: () => void;
+    error?: (err: unknown) => void;
+  }) => void };
+}
+
+/**
  * Configuración completa para el componente CRUD
  */
 export interface CrudTableConfig<T = Record<string, unknown>> {
@@ -59,4 +82,6 @@ export interface CrudTableConfig<T = Record<string, unknown>> {
   searchPlaceholder?: string;
   /** Mostrar acción de ver detalle (default: false) */
   showViewDetail?: boolean;
+  /** Usar paginación y búsqueda server-side (default: false) */
+  serverSide?: boolean;
 }

@@ -16,11 +16,22 @@ import { Observable } from 'rxjs';
 
 // Servicio wrapper que transforma los datos para agregar campos de localidad y nombre de institución
 class ProyeccionesServiceWrapper {
+  private extraParams: Record<string, unknown> = {};
+
   constructor(private proyeccionesService: ProyeccionesService) {}
 
-  getAll() {
-    return new Observable<{ data: any }>(observer => {
-      this.proyeccionesService.getAll().subscribe({
+  setExtraParams(params: Record<string, unknown>) {
+    this.extraParams = params;
+  }
+
+  getExtraParams(): Record<string, unknown> {
+    return this.extraParams;
+  }
+
+  getAll(params?: { page?: number; per_page?: number; search?: string; [key: string]: unknown }) {
+    const mergedParams = { ...this.extraParams, ...params };
+    return new Observable<{ data: any; meta: any }>(observer => {
+      this.proyeccionesService.getAll(mergedParams).subscribe({
         next: (res: any) => {
           // Transformar los datos para agregar campos calculados
           const transformedData = res.data.map((proyeccion: any) => {
@@ -38,7 +49,7 @@ class ProyeccionesServiceWrapper {
               cantidadDisplay: cantidad != null ? String(cantidad) : '-'
             };
           });
-          observer.next({ data: transformedData });
+          observer.next({ data: transformedData, meta: res.meta });
           observer.complete();
         },
         error: (err: any) => observer.error(err)
@@ -604,7 +615,12 @@ export class ProyeccionesListComponent implements OnInit {
   // Effect para filtrar automáticamente cuando cambia el nivel
   private nivelFilterEffect = effect(() => {
     const nivelId = this.selectedNivelId();
-    this.proyeccionesService.setNivelFiltro(nivelId);
+    // Update the wrapper service with the nivel filter
+    if (nivelId) {
+      this.proyeccionesServiceWrapper.setExtraParams({ id_nivel: nivelId });
+    } else {
+      this.proyeccionesServiceWrapper.setExtraParams({});
+    }
     if (this.crudTable) {
       this.crudTable.reloadData();
     }
@@ -670,6 +686,7 @@ export class ProyeccionesListComponent implements OnInit {
     pageSize: 25,
     searchPlaceholder: 'Buscar proyecciones...',
     showViewDetail: true,
+    serverSide: true,
     columns: [
       { key: 'id', label: 'ID', sortable: true },
       {

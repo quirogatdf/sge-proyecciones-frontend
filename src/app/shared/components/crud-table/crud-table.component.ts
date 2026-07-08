@@ -12,7 +12,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ColumnConfig, CrudService, CrudTableConfig } from '../../interfaces/crud-config.interface';
+import { ColumnConfig, CrudTableConfig, ServerSideCrudService } from '../../interfaces/crud-config.interface';
 import { AlertService } from '../../../core/services/alert.service';
 import { AuthService } from '../../../core/services/auth.service';
 import {
@@ -88,43 +88,51 @@ import {
             </tr>
           </thead>
           <tbody>
-            @for (item of paginatedItems(); track item['id']) {
-              <tr
-                [class.selected]="selectedId() === item['id']"
-                [style.cursor]="selectable !== false ? 'pointer' : undefined"
-                (click)="selectRow(item)"
-              >
-                @for (col of config.columns; track col.key) {
-                  <td>
-                    @if (col.render) {
-                      <div [innerHTML]="getCellHtml(item, col)"></div>
-                    } @else {
-                      {{ getCellValue(item, col) }}
+            @if (serverLoading()) {
+              <tr>
+                <td [attr.colspan]="config.columns.length + 1" class="empty">
+                  Cargando...
+                </td>
+              </tr>
+            } @else {
+              @for (item of paginatedItems(); track item['id']) {
+                <tr
+                  [class.selected]="selectedId() === item['id']"
+                  [style.cursor]="selectable !== false ? 'pointer' : undefined"
+                  (click)="selectRow(item)"
+                >
+                  @for (col of config.columns; track col.key) {
+                    <td>
+                      @if (col.render) {
+                        <div [innerHTML]="getCellHtml(item, col)"></div>
+                      } @else {
+                        {{ getCellValue(item, col) }}
+                      }
+                    </td>
+                  }
+                  <td class="actions" (click)="$event.stopPropagation()">
+                    @if (config.showViewDetail) {
+                      <button class="btn-icon" (click)="onViewDetail(item['id'])">
+                        <svg lucideEye [size]="16"></svg>
+                      </button>
+                    }
+                    @if (authService.isAdmin()) {
+                      <button class="btn-icon" (click)="openModal(item)">
+                        <svg lucidePencil [size]="16"></svg>
+                      </button>
+                      <button class="btn-icon btn-danger" (click)="deleteItem(item['id'])">
+                        <svg lucideTrash2 [size]="16"></svg>
+                      </button>
                     }
                   </td>
-                }
-                <td class="actions" (click)="$event.stopPropagation()">
-                  @if (config.showViewDetail) {
-                    <button class="btn-icon" (click)="onViewDetail(item['id'])">
-                      <svg lucideEye [size]="16"></svg>
-                    </button>
-                  }
-                  @if (authService.isAdmin()) {
-                    <button class="btn-icon" (click)="openModal(item)">
-                      <svg lucidePencil [size]="16"></svg>
-                    </button>
-                    <button class="btn-icon btn-danger" (click)="deleteItem(item['id'])">
-                      <svg lucideTrash2 [size]="16"></svg>
-                    </button>
-                  }
-                </td>
-              </tr>
-            } @empty {
-              <tr (click)="$event.stopPropagation()">
-                <td [attr.colspan]="config.columns.length + 1" class="empty">
-                  No hay registros cargados
-                </td>
-              </tr>
+                </tr>
+              } @empty {
+                <tr (click)="$event.stopPropagation()">
+                  <td [attr.colspan]="config.columns.length + 1" class="empty">
+                    No hay registros cargados
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>
@@ -140,7 +148,12 @@ import {
               Anterior
             </button>
 
-            <span class="page-info"> Página {{ currentPage() }} de {{ totalPages() }} </span>
+            <span class="page-info">
+              Página {{ currentPage() }} de {{ totalPages() }}
+              @if (config.serverSide && serverTotalItems() > 0) {
+                <span class="total-info"> ({{ serverTotalItems() }} registros)</span>
+              }
+            </span>
 
             <button
               class="btn-page"
@@ -438,6 +451,11 @@ import {
         font-size: 0.875rem;
         color: var(--muted-foreground);
       }
+
+      .total-info {
+        color: var(--muted-foreground);
+        font-size: 0.8rem;
+      }
     `,
   ],
 })
@@ -466,9 +484,18 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   sortBy = signal<keyof T | null>(null);
   sortDirection = signal<'asc' | 'desc'>('asc');
 
+  // Server-side pagination state
+  serverTotalItems = signal(0);
+  serverTotalPages = signal(1);
+  serverLoading = signal(false);
+
   pageSize = computed(() => this.config.pageSize || 25);
 
+  // Client-side filtered items
   filteredItems = computed(() => {
+    // If server-side, don't do client-side filtering
+    if (this.config.serverSide) return this.items();
+    
     const search = this.searchTerm().toLowerCase();
     const items = this.items();
     if (!search) return items;
@@ -517,6 +544,9 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   }
 
   sortedItems = computed(() => {
+    // If server-side, don't do client-side sorting
+    if (this.config.serverSide) return this.filteredItems();
+    
     const items = [...this.filteredItems()];
     const sortBy = this.sortBy();
     if (!sortBy) return items;
@@ -542,9 +572,13 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
     return items;
   });
 
-  totalPages = computed(() => Math.max(1, Math.ceil(this.sortedItems().length / this.pageSize())));
+  totalPages = computed(() => {
+    if (this.config.serverSide) return this.serverTotalPages();
+    return Math.max(1, Math.ceil(this.sortedItems().length / this.pageSize()));
+  });
 
   paginatedItems = computed(() => {
+    if (this.config.serverSide) return this.sortedItems();
     const start = (this.currentPage() - 1) * this.pageSize();
     return this.sortedItems().slice(start, start + this.pageSize());
   });
@@ -554,12 +588,45 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   }
 
   loadItems() {
-    (this.service as any).getAll().subscribe({
+    if (this.config.serverSide) {
+      this.loadServerSide();
+    } else {
+      (this.service as any).getAll().subscribe({
+        next: (res: any) => {
+          const data = res.data;
+          this.items.set(Array.isArray(data) ? data : [data]);
+        },
+        error: (err: any) => console.error('Error cargando datos:', err),
+      });
+    }
+  }
+
+  private loadServerSide() {
+    this.serverLoading.set(true);
+    const params: Record<string, unknown> = {
+      page: this.currentPage(),
+      per_page: this.pageSize(),
+    };
+    
+    const search = this.searchTerm();
+    if (search) params['search'] = search;
+    
+    // Add any extra params from the service wrapper
+    const extraParams = this.service?.getExtraParams?.();
+    if (extraParams) Object.assign(params, extraParams);
+
+    (this.service as ServerSideCrudService<T>).getAll(params).subscribe({
       next: (res: any) => {
-        const data = res.data;
-        this.items.set(Array.isArray(data) ? data : [data]);
+        this.items.set(res.data);
+        this.serverTotalItems.set(res.meta.total);
+        this.serverTotalPages.set(res.meta.last_page);
+        this.currentPage.set(res.meta.current_page);
+        this.serverLoading.set(false);
       },
-      error: (err: any) => console.error('Error cargando datos:', err),
+      error: (err: any) => {
+        console.error('Error cargando datos:', err);
+        this.serverLoading.set(false);
+      },
     });
   }
 
@@ -570,9 +637,17 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   onSearch(term: string) {
     this.searchTerm.set(term);
     this.currentPage.set(1);
+    if (this.config.serverSide) {
+      this.loadServerSide();
+    }
   }
 
   onSort(field: keyof T) {
+    if (this.config.serverSide) {
+      // Server-side sorting not implemented yet, could be added
+      return;
+    }
+    
     if (this.sortBy() === field) {
       this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
     } else {
@@ -586,6 +661,9 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
     const total = this.totalPages();
     if (page >= 1 && page <= total) {
       this.currentPage.set(page);
+      if (this.config.serverSide) {
+        this.loadServerSide();
+      }
     }
   }
 

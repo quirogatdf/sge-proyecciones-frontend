@@ -383,7 +383,7 @@ export class DashboardPage {
 
   private loadYears(): void {
     // Extract distinct years from all proyecciones
-    this.proyeccionesService.getAll().subscribe({
+    this.proyeccionesService.getAllForDashboard().subscribe({
       next: (response) => {
         const proyecciones = Array.isArray(response.data) ? response.data : [response.data];
         const distinctYears = [
