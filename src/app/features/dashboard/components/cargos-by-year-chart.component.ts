@@ -59,7 +59,7 @@ export class CargosByYearChartComponent {
 
     const config: ChartConfig = {
       type: 'bar',
-      labels: data.map((item: { year: number; count: number }) => item.year.toString()),
+      labels: data.map((item: { year: number; count: number }) => `${item.year} (${item.count})`),
       datasets: [
         {
           label: 'Cargos',
@@ -93,7 +93,7 @@ export class CargosByYearChartComponent {
             text: config.title,
           },
           legend: {
-            display: true,
+            display: false,
           },
         },
         scales: {

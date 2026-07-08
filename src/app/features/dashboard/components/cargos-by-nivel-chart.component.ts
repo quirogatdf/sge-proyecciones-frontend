@@ -76,7 +76,7 @@ export class CargosByNivelChartComponent {
 
     const config: ChartConfig = {
       type: 'bar',
-      labels: data.map(item => item.nivel_nombre),
+      labels: data.map(item => `${item.nivel_nombre} (${item.count})`),
       datasets: [
         {
           label: 'Cargos',
@@ -110,7 +110,7 @@ export class CargosByNivelChartComponent {
             text: config.title,
           },
           legend: {
-            display: true,
+            display: false,
           },
         },
         scales: {

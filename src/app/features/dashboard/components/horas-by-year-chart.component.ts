@@ -59,7 +59,7 @@ export class HorasByYearChartComponent {
 
     const config: ChartConfig = {
       type: 'bar',
-      labels: data.map((item: { year: number; totalHoras: number }) => item.year.toString()),
+      labels: data.map((item: { year: number; totalHoras: number }) => `${item.year} (${item.totalHoras})`),
       datasets: [
         {
           label: 'Horas',
@@ -93,7 +93,7 @@ export class HorasByYearChartComponent {
             text: config.title,
           },
           legend: {
-            display: true,
+            display: false,
           },
         },
         scales: {
