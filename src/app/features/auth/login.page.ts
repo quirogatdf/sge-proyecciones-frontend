@@ -21,7 +21,7 @@ import { LucideLogIn } from '@lucide/angular';
         </div>
 
         <!-- Form -->
-        <form (ngSubmit)="onLogin()" class="login-form">
+        <form (ngSubmit)="onLogin()" class="login-form" [class.navigating]="navigating()">
           <!-- Error message -->
           @if (error()) {
             <div class="alert-error">
@@ -39,7 +39,7 @@ import { LucideLogIn } from '@lucide/angular';
               (ngModelChange)="username.set($event); error.set('')"
               name="username"
               autocomplete="username"
-              [disabled]="loading()"
+              [disabled]="loading() || navigating()"
               class="input"
             />
           </div>
@@ -54,13 +54,13 @@ import { LucideLogIn } from '@lucide/angular';
               (ngModelChange)="password.set($event); error.set('')"
               name="password"
               autocomplete="current-password"
-              [disabled]="loading()"
+              [disabled]="loading() || navigating()"
               class="input"
             />
           </div>
 
-          <button type="submit" class="btn-submit" [disabled]="loading()">
-            @if (loading()) {
+          <button type="submit" class="btn-submit" [disabled]="loading() || navigating()">
+            @if (loading() || navigating()) {
               <span class="spinner"></span>
               Ingresando...
             } @else {
@@ -212,6 +212,11 @@ import { LucideLogIn } from '@lucide/angular';
         cursor: not-allowed;
       }
 
+      .login-form.navigating {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
       .spinner {
         width: 16px;
         height: 16px;
@@ -238,6 +243,7 @@ export class LoginPage {
   readonly password = signal('');
   readonly error = signal('');
   readonly loading = signal(false);
+  readonly navigating = signal(false);
 
   constructor() {
     // Si ya está autenticado, lo mandamos directo al dashboard
@@ -257,8 +263,10 @@ export class LoginPage {
 
     try {
       await this.authService.login(this.username(), this.password());
-      this.router.navigate(['/dashboard'], { replaceUrl: true });
+      this.navigating.set(true);
+      await this.router.navigate(['/dashboard'], { replaceUrl: true });
     } catch (err: unknown) {
+      this.navigating.set(false);
       const status = (err as { status?: number })?.status;
       if (status === 401) {
         this.error.set('Usuario o contraseña incorrectos');
