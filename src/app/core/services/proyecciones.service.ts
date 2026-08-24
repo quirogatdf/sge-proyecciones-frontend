@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Proyeccion } from '../../shared/models/proyeccion';
 import { environment } from '../../../environments/environment';
@@ -104,5 +104,30 @@ export class ProyeccionesService {
     return this.http.get<ProyeccionResponse>(
       `${this.getApiUrl('proyecciones')}?include=nivel`
     );
+  }
+
+  /**
+   * Export proyecciones to Excel file.
+   * Returns a Blob that should be saved as a download.
+   */
+  exportExcel(params: {
+    motivo?: 'Continuidad' | 'Creacion';
+    id_nivel?: number;
+    id_institucion?: number;
+    id_cargo?: number;
+    anio?: string;
+  }): Observable<Blob> {
+    let httpParams = new HttpParams();
+
+    if (params.motivo) httpParams = httpParams.set('motivo', params.motivo);
+    if (params.id_nivel) httpParams = httpParams.set('id_nivel', params.id_nivel.toString());
+    if (params.id_institucion) httpParams = httpParams.set('id_institucion', params.id_institucion.toString());
+    if (params.id_cargo) httpParams = httpParams.set('id_cargo', params.id_cargo.toString());
+    if (params.anio) httpParams = httpParams.set('anio', params.anio);
+
+    return this.http.get(this.getApiUrl('proyecciones/export'), {
+      params: httpParams,
+      responseType: 'blob',
+    });
   }
 }

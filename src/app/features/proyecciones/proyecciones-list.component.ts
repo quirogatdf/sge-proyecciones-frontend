@@ -11,6 +11,7 @@ import { InstitucionesService } from '../../core/services/instituciones.service'
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
+import { ExportDialogComponent } from './export-dialog.component';
 import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
 import { Observable } from 'rxjs';
 
@@ -78,11 +79,19 @@ interface SelectOption {
 @Component({
   selector: 'app-proyecciones-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, CrudTableComponent, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, CrudTableComponent, SearchableSelectComponent, ExportDialogComponent],
   template: `
     <div class="page">
       <header class="page-header">
         <h1>Proyecciones</h1>
+        <button class="btn-export" (click)="openExportDialog()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exportar Excel
+        </button>
       </header>
 
       <!-- Filtro por nivel -->
@@ -435,6 +444,12 @@ interface SelectOption {
           </div>
         </div>
       </app-crud-table>
+
+      <app-export-dialog
+        [isOpen]="exportDialogOpen()"
+        (closed)="exportDialogOpen.set(false)"
+        (exportComplete)="onExportComplete()"
+      />
     </div>
   `,
   styles: [
@@ -452,6 +467,31 @@ interface SelectOption {
         font-weight: 600;
         color: var(--foreground);
         margin: 0;
+      }
+
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+
+      .btn-export:hover {
+        opacity: 0.9;
       }
 
       .filters {
@@ -605,6 +645,7 @@ export class ProyeccionesListComponent implements OnInit {
   }
 
   saving = signal(false);
+  exportDialogOpen = signal(false);
   niveles = signal<{ id: number; nombre: string }[]>([]);
   cargos = signal<Cargo[]>([]);
   funciones = signal<{ id: number; nombre: string }[]>([]);
@@ -1009,5 +1050,16 @@ export class ProyeccionesListComponent implements OnInit {
 
   onViewDetail(id: number) {
     this.router.navigate(['/proyecciones', id]);
+  }
+
+  openExportDialog() {
+    this.exportDialogOpen.set(true);
+  }
+
+  onExportComplete() {
+    // Optionally reload data after export
+    if (this.crudTable) {
+      this.crudTable.reloadData();
+    }
   }
 }
