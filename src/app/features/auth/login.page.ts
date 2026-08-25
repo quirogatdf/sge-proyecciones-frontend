@@ -2,11 +2,11 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { LucideLogIn } from '@lucide/angular';
+import { LucideEye, LucideEyeOff, LucideLogIn } from '@lucide/angular';
 
 @Component({
   selector: 'app-login-page',
-  imports: [FormsModule, LucideLogIn],
+  imports: [FormsModule, LucideLogIn, LucideEye, LucideEyeOff],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="login-container">
@@ -46,17 +46,34 @@ import { LucideLogIn } from '@lucide/angular';
 
           <div class="field">
             <label for="password">Contraseña</label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Ingresá tu contraseña"
-              [ngModel]="password()"
-              (ngModelChange)="password.set($event); error.set('')"
-              name="password"
-              autocomplete="current-password"
-              [disabled]="loading() || navigating()"
-              class="input"
-            />
+            <div class="password-wrapper">
+              <input
+                id="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                placeholder="Ingresá tu contraseña"
+                [ngModel]="password()"
+                (ngModelChange)="password.set($event); error.set('')"
+                name="password"
+                autocomplete="current-password"
+                [disabled]="loading() || navigating()"
+                class="input has-toggle"
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                (click)="showPassword.set(!showPassword())"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                [attr.aria-pressed]="showPassword()"
+                tabindex="0"
+                [disabled]="loading() || navigating()"
+              >
+                @if (showPassword()) {
+                  <svg lucideEyeOff [size]="18"></svg>
+                } @else {
+                  <svg lucideEye [size]="18"></svg>
+                }
+              </button>
+            </div>
           </div>
 
           <button type="submit" class="btn-submit" [disabled]="loading() || navigating()">
@@ -185,6 +202,46 @@ import { LucideLogIn } from '@lucide/angular';
         cursor: not-allowed;
       }
 
+      .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .input.has-toggle {
+        padding-right: 2.5rem;
+      }
+
+      .toggle-password {
+        position: absolute;
+        right: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius);
+        color: var(--muted-foreground);
+        cursor: pointer;
+        transition: color 0.2s ease;
+      }
+
+      .toggle-password:hover:not(:disabled) {
+        color: var(--foreground);
+      }
+
+      .toggle-password:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .toggle-password:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+
       .btn-submit {
         display: inline-flex;
         align-items: center;
@@ -241,6 +298,7 @@ export class LoginPage {
 
   readonly username = signal('');
   readonly password = signal('');
+  readonly showPassword = signal(false);
   readonly error = signal('');
   readonly loading = signal(false);
   readonly navigating = signal(false);
