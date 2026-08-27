@@ -1,13 +1,14 @@
-import { Component, input, output, signal, inject, OnInit } from '@angular/core';
+import { Component, input, output, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProyeccionesService } from '../../core/services/proyecciones.service';
 import { InstitucionesService } from '../../core/services/instituciones.service';
 import { CargosService, Cargo } from '../../core/services/cargos.service';
 import { AlertService } from '../../core/services/alert.service';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
 
 export interface ExportFilters {
-  motivo: 'Continuidad' | 'Creacion';
+  motivo: 'Continuidad' | 'Creacion' | null;
   id_institucion: number | null;
   id_cargo: number | null;
   anio: string | null;
@@ -16,7 +17,7 @@ export interface ExportFilters {
 @Component({
   selector: 'app-export-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SearchableSelectComponent],
   template: `
     @if (isOpen()) {
       <div class="dialog-overlay" (click)="onCancel()">
@@ -27,51 +28,37 @@ export interface ExportFilters {
           </div>
 
           <div class="dialog-body">
-            <!-- Tipo de exportación -->
+            <!-- Motivo -->
             <div class="form-group">
-              <label>Tipo de Exportación</label>
-              <div class="radio-group">
-                <label class="radio-label">
-                  <input
-                    type="radio"
-                    name="motivo"
-                    value="Continuidad"
-                    [(ngModel)]="selectedMotivo"
-                  />
-                  <span>Continuidad</span>
-                </label>
-                <label class="radio-label">
-                  <input
-                    type="radio"
-                    name="motivo"
-                    value="Creacion"
-                    [(ngModel)]="selectedMotivo"
-                  />
-                  <span>Creación</span>
-                </label>
-              </div>
+              <label for="exportMotivo">Motivo</label>
+              <app-searchable-select
+                id="exportMotivo"
+                [options]="motivosOptions()"
+                placeholder="Todos los motivos"
+                [(value)]="selectedMotivo"
+              />
             </div>
 
             <!-- Institución -->
             <div class="form-group">
               <label for="exportInstitucion">Institución</label>
-              <select id="exportInstitucion" [(ngModel)]="selectedInstitucionId">
-                <option [ngValue]="null">Todas las instituciones</option>
-                @for (inst of instituciones(); track inst.id) {
-                  <option [ngValue]="inst.id">{{ inst.nombre }}</option>
-                }
-              </select>
+              <app-searchable-select
+                id="exportInstitucion"
+                [options]="institucionesOptions()"
+                placeholder="Todas las instituciones"
+                [(value)]="selectedInstitucionId"
+              />
             </div>
 
             <!-- Cargo -->
             <div class="form-group">
               <label for="exportCargo">Cargo</label>
-              <select id="exportCargo" [(ngModel)]="selectedCargoId">
-                <option [ngValue]="null">Todos los cargos</option>
-                @for (cargo of cargos(); track cargo.id) {
-                  <option [ngValue]="cargo.id">{{ cargo.codigo }} - {{ cargo.nombre }}</option>
-                }
-              </select>
+              <app-searchable-select
+                id="exportCargo"
+                [options]="cargosOptions()"
+                placeholder="Todos los cargos"
+                [(value)]="selectedCargoId"
+              />
             </div>
 
             <!-- Año -->
@@ -127,6 +114,11 @@ export interface ExportFilters {
       width: 100%;
       max-width: 480px;
       max-height: 90vh;
+      overflow: visible;
+    }
+
+    .dialog-body {
+      max-height: 60vh;
       overflow-y: auto;
     }
 
@@ -193,26 +185,6 @@ export interface ExportFilters {
     .form-group input:focus {
       outline: none;
       border-color: var(--primary);
-    }
-
-    .radio-group {
-      display: flex;
-      gap: 1.5rem;
-    }
-
-    .radio-label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-size: 0.875rem;
-      color: var(--foreground);
-    }
-
-    .radio-label input[type="radio"] {
-      width: 1rem;
-      height: 1rem;
-      cursor: pointer;
     }
 
     .dialog-footer {
@@ -285,7 +257,7 @@ export class ExportDialogComponent implements OnInit {
   closed = output<void>();
   exportComplete = output<void>();
 
-  selectedMotivo: 'Continuidad' | 'Creacion' = 'Continuidad';
+  selectedMotivo: 'Continuidad' | 'Creacion' | string | null = null;
   selectedInstitucionId: number | null = null;
   selectedCargoId: number | null = null;
   selectedAnio: string = '';
@@ -293,6 +265,22 @@ export class ExportDialogComponent implements OnInit {
   instituciones = signal<{ id: number; nombre: string }[]>([]);
   cargos = signal<Cargo[]>([]);
   exporting = signal(false);
+
+  readonly motivosOptions = signal<{ id: string | number; label: string }[]>([
+    { id: null as unknown as string, label: 'Todos los motivos' },
+    { id: 'Creacion', label: 'Creación' },
+    { id: 'Continuidad', label: 'Continuidad' },
+  ]);
+
+  readonly institucionesOptions = computed(() => [
+    { id: null as unknown as number, label: 'Todas las instituciones' },
+    ...this.instituciones().map((i) => ({ id: i.id, label: i.nombre })),
+  ]);
+
+  readonly cargosOptions = computed(() => [
+    { id: null as unknown as number, label: 'Todos los cargos' },
+    ...this.cargos().map((c) => ({ id: c.id, label: `${c.codigo} - ${c.nombre}` })),
+  ]);
 
   ngOnInit() {
     this.loadInstituciones();
@@ -329,14 +317,15 @@ export class ExportDialogComponent implements OnInit {
     this.exporting.set(true);
 
     const params: {
-      motivo: 'Continuidad' | 'Creacion';
+      motivo?: 'Continuidad' | 'Creacion';
       id_institucion?: number;
       id_cargo?: number;
       anio?: string;
-    } = {
-      motivo: this.selectedMotivo,
-    };
+    } = {};
 
+    if (this.selectedMotivo !== null) {
+      params.motivo = this.selectedMotivo as 'Continuidad' | 'Creacion';
+    }
     if (this.selectedInstitucionId !== null) {
       params.id_institucion = this.selectedInstitucionId;
     }
@@ -355,8 +344,8 @@ export class ExportDialogComponent implements OnInit {
         link.href = url;
 
         const timestamp = new Date().toISOString().slice(0, 16).replace(/[:-]/g, '');
-        const motivo = this.selectedMotivo.toLowerCase().replace(' ', '_');
-        link.download = `proyecciones_${motivo}_${timestamp}.xlsx`;
+        const motivoSuffix = this.selectedMotivo ? `_${this.selectedMotivo.toLowerCase()}` : '_todos';
+        link.download = `proyecciones${motivoSuffix}_${timestamp}.xlsx`;
 
         document.body.appendChild(link);
         link.click();

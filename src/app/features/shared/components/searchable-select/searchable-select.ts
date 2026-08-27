@@ -118,8 +118,23 @@ export class SearchableSelectComponent {
 
   // Effects
   readonly filteredOptionsEffect = effect(() => {
-    this.filteredOptions();
-    this.highlightedIndex.set(0);
+    const filtered = this.filteredOptions();
+    const query = this.searchQuery();
+
+    // Si está filtrando (escribiendo), resaltar el primer resultado
+    if (query) {
+      this.highlightedIndex.set(0);
+      return;
+    }
+
+    // Si no hay filtro (dropdown recién abierto), resaltar la opción seleccionada
+    const currentValue = this.value();
+    const idx = filtered.findIndex((o) => o.id === currentValue);
+    this.highlightedIndex.set(idx >= 0 ? idx : 0);
+    // Asegurar que la opción resaltada sea visible al reabrir
+    if (this.isOpen()) {
+      this.scrollHighlightedIntoView();
+    }
   });
 
   readonly valueEffect = effect(() => {
@@ -166,7 +181,8 @@ export class SearchableSelectComponent {
     this.dropdownWidth.set(triggerRect.width);
     
     this.isOpen.set(true);
-    
+    this.scrollHighlightedIntoView();
+
     // Agregar listener para click outside después de un tick
     setTimeout(() => {
       this.clickHandler = (event: MouseEvent) => {
@@ -281,6 +297,7 @@ export class SearchableSelectComponent {
     if (options.length === 0) return;
     const nextIdx = (this.highlightedIndex() + 1) % options.length;
     this.highlightedIndex.set(nextIdx);
+    this.scrollHighlightedIntoView();
   }
 
   private highlightPrevious() {
@@ -288,5 +305,16 @@ export class SearchableSelectComponent {
     if (options.length === 0) return;
     const prevIdx = (this.highlightedIndex() - 1 + options.length) % options.length;
     this.highlightedIndex.set(prevIdx);
+    this.scrollHighlightedIntoView();
+  }
+
+  private scrollHighlightedIntoView() {
+    setTimeout(() => {
+      const dropdown = this.dropdownEl()?.nativeElement;
+      if (!dropdown) return;
+      const idx = this.highlightedIndex();
+      const child = dropdown.children[idx] as HTMLElement | undefined;
+      child?.scrollIntoView({ block: 'nearest' });
+    }, 0);
   }
 }
