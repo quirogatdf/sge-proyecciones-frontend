@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProyeccionesService } from '../../core/services/proyecciones.service';
 import { InstitucionesService } from '../../core/services/instituciones.service';
 import { CargosService, Cargo } from '../../core/services/cargos.service';
+import { ResolucionesService } from '../../core/services/resoluciones.service';
 import { AlertService } from '../../core/services/alert.service';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
 
@@ -11,6 +12,7 @@ export interface ExportFilters {
   motivo: 'Continuidad' | 'Creacion' | null;
   id_institucion: number | null;
   id_cargo: number | null;
+  id_resolucion: number | null;
   anio: string | null;
 }
 
@@ -28,6 +30,17 @@ export interface ExportFilters {
           </div>
 
           <div class="dialog-body">
+            <!-- Resolución -->
+            <div class="form-group">
+              <label for="exportResolucion">Resolución Ministerial</label>
+              <app-searchable-select
+                id="exportResolucion"
+                [options]="resolucionesOptions()"
+                placeholder="Todas las resoluciones"
+                [(value)]="selectedResolucionId"
+              />
+            </div>
+
             <!-- Motivo -->
             <div class="form-group">
               <label for="exportMotivo">Motivo</label>
@@ -201,11 +214,13 @@ export interface ExportFilters {
       justify-content: center;
       gap: 0.5rem;
       padding: 0.5rem 1rem;
+      border: none;
+      border-radius: var(--radius);
       font-size: 0.875rem;
       font-weight: 500;
-      border-radius: var(--radius);
       cursor: pointer;
-      transition: background-color 0.15s, opacity 0.15s;
+      transition: all 0.2s ease;
+      line-height: 1;
     }
 
     .btn:disabled {
@@ -214,13 +229,14 @@ export interface ExportFilters {
     }
 
     .btn-secondary {
-      background: var(--secondary);
-      color: var(--secondary-foreground);
+      background: var(--surface);
+      color: var(--foreground);
       border: 1px solid var(--border);
     }
 
     .btn-secondary:hover:not(:disabled) {
       background: var(--accent);
+      color: var(--foreground);
     }
 
     .btn-primary {
@@ -230,7 +246,7 @@ export interface ExportFilters {
     }
 
     .btn-primary:hover:not(:disabled) {
-      opacity: 0.9;
+      filter: brightness(1.1);
     }
 
     .spinner {
@@ -251,6 +267,7 @@ export class ExportDialogComponent implements OnInit {
   private readonly proyeccionesService = inject(ProyeccionesService);
   private readonly institucionesService = inject(InstitucionesService);
   private readonly cargosService = inject(CargosService);
+  private readonly resolucionesService = inject(ResolucionesService);
   private readonly alertService = inject(AlertService);
 
   isOpen = input.required<boolean>();
@@ -260,10 +277,12 @@ export class ExportDialogComponent implements OnInit {
   selectedMotivo: 'Continuidad' | 'Creacion' | string | null = null;
   selectedInstitucionId: number | null = null;
   selectedCargoId: number | null = null;
+  selectedResolucionId: number | null = null;
   selectedAnio: string = '';
 
   instituciones = signal<{ id: number; nombre: string }[]>([]);
   cargos = signal<Cargo[]>([]);
+  resoluciones = signal<{ id: number; nombre: string }[]>([]);
   exporting = signal(false);
 
   readonly motivosOptions = signal<{ id: string | number; label: string }[]>([
@@ -282,9 +301,15 @@ export class ExportDialogComponent implements OnInit {
     ...this.cargos().map((c) => ({ id: c.id, label: `${c.codigo} - ${c.nombre}` })),
   ]);
 
+  readonly resolucionesOptions = computed(() => [
+    { id: null as unknown as number, label: 'Todas las resoluciones' },
+    ...this.resoluciones().map((r) => ({ id: r.id, label: r.nombre })),
+  ]);
+
   ngOnInit() {
     this.loadInstituciones();
     this.loadCargos();
+    this.loadResoluciones();
   }
 
   private loadInstituciones() {
@@ -309,6 +334,18 @@ export class ExportDialogComponent implements OnInit {
     });
   }
 
+  private loadResoluciones() {
+    this.resolucionesService.getAll().subscribe({
+      next: (res: any) => {
+        const data = res.data;
+        this.resoluciones.set(
+          Array.isArray(data) ? data.map((r: any) => ({ id: r.id, nombre: r.nombre })) : []
+        );
+      },
+      error: () => {},
+    });
+  }
+
   onCancel() {
     this.closed.emit();
   }
@@ -320,6 +357,7 @@ export class ExportDialogComponent implements OnInit {
       motivo?: 'Continuidad' | 'Creacion';
       id_institucion?: number;
       id_cargo?: number;
+      id_resolucion?: number;
       anio?: string;
     } = {};
 
@@ -331,6 +369,9 @@ export class ExportDialogComponent implements OnInit {
     }
     if (this.selectedCargoId !== null) {
       params.id_cargo = this.selectedCargoId;
+    }
+    if (this.selectedResolucionId !== null) {
+      params.id_resolucion = this.selectedResolucionId;
     }
     if (this.selectedAnio.trim()) {
       params.anio = this.selectedAnio.trim();

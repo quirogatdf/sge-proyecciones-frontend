@@ -157,7 +157,7 @@ import { ActivatedRoute, Router } from '@angular/router';
             <div class="detail-grid">
               <div class="detail-item">
                 <label>Resolución Ministerial:</label>
-                <span>{{ proyeccion()?.resolucion_ministerial || '-' }}</span>
+                <span>{{ proyeccion()?.resolucion?.nombre || proyeccion()?.resolucion_ministerial || '-' }}</span>
               </div>
               <div class="detail-item">
                 <label>Resolución Ministerial Ext:</label>

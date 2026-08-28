@@ -43,13 +43,22 @@ export class ProyeccionesService {
     return `${this.baseUrl}/${endpoint}`;
   }
 
-  getAll(params?: ProyeccionQueryParams): Observable<PaginatedProyeccionResponse> {
+  getAll(params?: ProyeccionQueryParams & Record<string, unknown>): Observable<PaginatedProyeccionResponse> {
     let httpParams = new HttpParams();
     
     if (params?.page) httpParams = httpParams.set('page', params.page.toString());
     if (params?.per_page) httpParams = httpParams.set('per_page', params.per_page.toString());
-    if (params?.search) httpParams = httpParams.set('search', params.search);
-    if (params?.id_nivel) httpParams = httpParams.set('id_nivel', params.id_nivel.toString());
+    if (params?.search) httpParams = httpParams.set('search', params.search as string);
+    if (params?.id_nivel) httpParams = httpParams.set('id_nivel', (params.id_nivel as number).toString());
+    if (params?.['sort_by']) httpParams = httpParams.set('sort_by', params['sort_by'] as string);
+    if (params?.['sort_dir']) httpParams = httpParams.set('sort_dir', params['sort_dir'] as string);
+    // Forward any additional filter params (e.g. id_resolucion)
+    for (const [key, value] of Object.entries(params ?? {})) {
+      if (['page','per_page','search','id_nivel','sort_by','sort_dir'].includes(key)) continue;
+      if (value !== null && value !== undefined && value !== '') {
+        httpParams = httpParams.set(key, String(value));
+      }
+    }
     
     return this.http.get<PaginatedProyeccionResponse>(
       this.getApiUrl('proyecciones'),
@@ -115,6 +124,7 @@ export class ProyeccionesService {
     id_nivel?: number;
     id_institucion?: number;
     id_cargo?: number;
+    id_resolucion?: number;
     anio?: string;
   }): Observable<Blob> {
     let httpParams = new HttpParams();
@@ -123,6 +133,7 @@ export class ProyeccionesService {
     if (params.id_nivel) httpParams = httpParams.set('id_nivel', params.id_nivel.toString());
     if (params.id_institucion) httpParams = httpParams.set('id_institucion', params.id_institucion.toString());
     if (params.id_cargo) httpParams = httpParams.set('id_cargo', params.id_cargo.toString());
+    if (params.id_resolucion) httpParams = httpParams.set('id_resolucion', params.id_resolucion.toString());
     if (params.anio) httpParams = httpParams.set('anio', params.anio);
 
     return this.http.get(this.getApiUrl('proyecciones/export'), {

@@ -610,6 +610,13 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
     
     const search = this.searchTerm();
     if (search) params['search'] = search;
+
+    const sortBy = this.sortBy();
+    const sortDir = this.sortDirection();
+    if (sortBy) {
+      params['sort_by'] = sortBy as string;
+      params['sort_dir'] = sortDir;
+    }
     
     // Add any extra params from the service wrapper
     const extraParams = this.service?.getExtraParams?.();
@@ -643,16 +650,16 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   }
 
   onSort(field: keyof T) {
-    if (this.config.serverSide) {
-      // Server-side sorting not implemented yet, could be added
-      return;
-    }
-    
     if (this.sortBy() === field) {
       this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
     } else {
       this.sortBy.set(field);
       this.sortDirection.set('asc');
+    }
+    if (this.config.serverSide) {
+      this.currentPage.set(1);
+      this.loadServerSide();
+      return;
     }
     this.currentPage.set(1);
   }

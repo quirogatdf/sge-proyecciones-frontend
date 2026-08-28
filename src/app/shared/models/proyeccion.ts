@@ -13,7 +13,8 @@ export interface Proyeccion {
   fecha_desde: string; // date format
   fecha_hasta?: string | null; // date format
   id_institucion: number | null;
-  resolucion_ministerial?: string | null;
+  id_resolucion?: number | null;
+  resolucion_ministerial?: string | null; // @deprecated - usar id_resolucion -> resolucion.nombre
   resolucion_ministerial_ext?: string | null;
   disposicion_sgnij?: string | null;
   rect_disposoco_sgnij?: string | null;
@@ -49,5 +50,12 @@ export interface Proyeccion {
     id: number;
     nombre: string;
     localidad: string; // Campo agregado para mostrar la ciudad
+  };
+  resolucion?: {
+    id: number;
+    nombre: string;
+    año?: number | null;
+    observacion?: string | null;
+    url?: string | null;
   };
 }

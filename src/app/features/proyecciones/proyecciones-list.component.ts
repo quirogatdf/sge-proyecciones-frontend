@@ -8,6 +8,7 @@ import { CargosService, Cargo } from '../../core/services/cargos.service';
 import { FuncionesService } from '../../core/services/funciones.service';
 import { TurnosService } from '../../core/services/turnos.service';
 import { InstitucionesService } from '../../core/services/instituciones.service';
+import { ResolucionesService } from '../../core/services/resoluciones.service';
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
@@ -47,7 +48,8 @@ class ProyeccionesServiceWrapper {
               cargoDisplay: proyeccion.cargo
                 ? `${proyeccion.cargo.codigo} - ${proyeccion.cargo.nombre}`
                 : 'N/A',
-              cantidadDisplay: cantidad != null ? String(cantidad) : '-'
+              cantidadDisplay: cantidad != null ? String(cantidad) : '-',
+              resolucionDisplay: proyeccion.resolucion?.nombre || proyeccion.resolucion_ministerial || '-'
             };
           });
           observer.next({ data: transformedData, meta: res.meta });
@@ -69,6 +71,7 @@ interface ProyeccionConLocalidad extends Proyeccion {
   nombreInstitucion: string;
   cargoDisplay: string;
   cantidadDisplay: string;
+  resolucionDisplay: string;
 }
 
 interface SelectOption {
@@ -379,12 +382,12 @@ interface SelectOption {
 
           <div class="form-row">
             <div class="form-group">
-              <label for="resolucion_ministerial">Resolución Ministerial</label>
-              <input
-                id="resolucion_ministerial"
-                type="text"
-                [(ngModel)]="formData.resolucion_ministerial"
-                placeholder="Opcional"
+              <label for="id_resolucion">Resolución Ministerial</label>
+              <app-searchable-select
+                id="id_resolucion"
+                [options]="resolucionesOptions()"
+                placeholder="Seleccionar resolución..."
+                [(value)]="formData.id_resolucion"
               />
             </div>
 
@@ -633,6 +636,7 @@ export class ProyeccionesListComponent implements OnInit {
   private readonly funcionesService = inject(FuncionesService);
   private readonly turnosService = inject(TurnosService);
   private readonly institucionesService = inject(InstitucionesService);
+  private readonly resolucionesService = inject(ResolucionesService);
   private readonly alertService = inject(AlertService);
 
   @ViewChild('crudTable') crudTable?: any;
@@ -651,6 +655,7 @@ export class ProyeccionesListComponent implements OnInit {
   funciones = signal<{ id: number; nombre: string }[]>([]);
   turnos = signal<{ id: number; nombre: string }[]>([]);
   instituciones = signal<{ id: number; nombre: string }[]>([]);
+  resoluciones = signal<{ id: number; nombre: string }[]>([]);
   selectedNivelId = signal<number | null>(null);
 
   // Effect para filtrar automáticamente cuando cambia el nivel
@@ -702,6 +707,10 @@ export class ProyeccionesListComponent implements OnInit {
   readonly turnosOptions = computed(() =>
     this.turnos().map((t) => ({ id: t.id, label: t.nombre })),
   );
+
+  readonly resolucionesOptions = computed(() =>
+    this.resoluciones().map((r) => ({ id: r.id, label: r.nombre })),
+  );
   editingId = signal<number | null>(null);
 
   submitted = signal(false);
@@ -714,7 +723,7 @@ export class ProyeccionesListComponent implements OnInit {
     fecha_hasta: '',
     id_puesto: '',
     año: '',
-    resolucion_ministerial: '',
+    id_resolucion: null as number | null,
     resolucion_previa_continuidad: '',
     resolucion_ministerial_rect1: '',
     resolucion_ministerial_rect2: '',
@@ -799,7 +808,12 @@ export class ProyeccionesListComponent implements OnInit {
         },
       },
       { key: 'motivo', label: 'Motivo', sortable: true },
-      { key: 'resolucion_ministerial', label: 'Resolución Ministerial', sortable: true },
+      {
+        key: 'resolucionDisplay',
+        label: 'Resolución Ministerial',
+        sortable: true,
+        render: (item: ProyeccionConLocalidad) => item.resolucionDisplay || item.resolucion?.nombre || '-'
+      },
       {
         key: 'destino_nuevo',
         label: 'Destino',
@@ -822,6 +836,7 @@ export class ProyeccionesListComponent implements OnInit {
     this.loadFunciones();
     this.loadTurnos();
     this.loadInstituciones();
+    this.loadResoluciones();
   }
 
   private loadNiveles() {
@@ -889,6 +904,18 @@ export class ProyeccionesListComponent implements OnInit {
     });
   }
 
+  private loadResoluciones() {
+    this.resolucionesService.getAll().subscribe({
+      next: (res: any) => {
+        const data = res.data;
+        this.resoluciones.set(
+          Array.isArray(data) ? data.map((r: any) => ({ id: r.id, nombre: r.nombre })) : [],
+        );
+      },
+      error: (err: any) => console.error('Error cargando resoluciones:', err),
+    });
+  }
+
   onNivelFilterChange() {
     const nivelId = this.selectedNivelId();
     this.proyeccionesService.setNivelFiltro(nivelId);
@@ -929,7 +956,7 @@ export class ProyeccionesListComponent implements OnInit {
         id_funcion:
           item.id_funcion !== null && item.id_funcion !== undefined ? item.id_funcion : null,
         id_turno: item.id_turno !== null && item.id_turno !== undefined ? item.id_turno : null,
-        resolucion_ministerial: item.resolucion_ministerial || '',
+        id_resolucion: (item as any).id_resolucion ?? item.resolucion?.id ?? null,
         resolucion_ministerial_ext: item.resolucion_ministerial_ext || '',
         disposicion_sgnij: item.disposicion_sgnij || '',
         rect_disposoco_sgnij: item.rect_disposoco_sgnij || '',
@@ -958,7 +985,7 @@ export class ProyeccionesListComponent implements OnInit {
         id_funcion: null,
         id_turno: null,
         año: '',
-        resolucion_ministerial: '',
+        id_resolucion: null,
         resolucion_ministerial_ext: '',
         disposicion_sgnij: '',
         rect_disposoco_sgnij: '',
