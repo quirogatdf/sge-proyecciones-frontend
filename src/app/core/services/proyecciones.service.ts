@@ -115,6 +115,27 @@ export class ProyeccionesService {
     );
   }
 
+  getOpcionesFiltros(params?: {
+    id_resolucion?: number | null;
+    id_institucion?: number | null;
+    id_nivel?: number | null;
+    id_cargo?: number | null;
+    motivo?: string | null;
+    anio?: string | null;
+  }): Observable<{ data: { instituciones: any[]; cargos: any[]; resoluciones: any[]; niveles: any[] } }> {
+    let httpParams = new HttpParams();
+    if (params?.id_resolucion) httpParams = httpParams.set('id_resolucion', params.id_resolucion.toString());
+    if (params?.id_institucion) httpParams = httpParams.set('id_institucion', params.id_institucion.toString());
+    if (params?.id_nivel) httpParams = httpParams.set('id_nivel', params.id_nivel.toString());
+    if (params?.id_cargo) httpParams = httpParams.set('id_cargo', params.id_cargo.toString());
+    if (params?.motivo) httpParams = httpParams.set('motivo', params.motivo);
+    if (params?.anio) httpParams = httpParams.set('anio', params.anio);
+    return this.http.get<{ data: { instituciones: any[]; cargos: any[]; resoluciones: any[]; niveles: any[] } }>(
+      this.getApiUrl('proyecciones/opciones-filtro'),
+      { params: httpParams }
+    );
+  }
+
   /**
    * Export proyecciones to Excel file.
    * Returns a Blob that should be saved as a download.

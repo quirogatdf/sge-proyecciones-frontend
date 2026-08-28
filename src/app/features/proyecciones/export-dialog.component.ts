@@ -1,10 +1,8 @@
-import { Component, input, output, signal, inject, OnInit, computed } from '@angular/core';
+import { Component, input, output, signal, inject, OnInit, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProyeccionesService } from '../../core/services/proyecciones.service';
-import { InstitucionesService } from '../../core/services/instituciones.service';
-import { CargosService, Cargo } from '../../core/services/cargos.service';
-import { ResolucionesService } from '../../core/services/resoluciones.service';
+import { Cargo } from '../../core/services/cargos.service';
 import { AlertService } from '../../core/services/alert.service';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
 
@@ -38,6 +36,7 @@ export interface ExportFilters {
                 [options]="resolucionesOptions()"
                 placeholder="Todas las resoluciones"
                 [(value)]="selectedResolucionId"
+                (valueChanged)="onFilterChange()"
               />
             </div>
 
@@ -49,6 +48,7 @@ export interface ExportFilters {
                 [options]="motivosOptions()"
                 placeholder="Todos los motivos"
                 [(value)]="selectedMotivo"
+                (valueChanged)="onFilterChange()"
               />
             </div>
 
@@ -60,6 +60,7 @@ export interface ExportFilters {
                 [options]="institucionesOptions()"
                 placeholder="Todas las instituciones"
                 [(value)]="selectedInstitucionId"
+                (valueChanged)="onFilterChange()"
               />
             </div>
 
@@ -71,6 +72,7 @@ export interface ExportFilters {
                 [options]="cargosOptions()"
                 placeholder="Todos los cargos"
                 [(value)]="selectedCargoId"
+                (valueChanged)="onFilterChange()"
               />
             </div>
 
@@ -83,6 +85,7 @@ export interface ExportFilters {
                 maxlength="4"
                 placeholder="Todos los años"
                 [(ngModel)]="selectedAnio"
+                (ngModelChange)="onFilterChange()"
               />
             </div>
           </div>
@@ -265,10 +268,8 @@ export interface ExportFilters {
 })
 export class ExportDialogComponent implements OnInit {
   private readonly proyeccionesService = inject(ProyeccionesService);
-  private readonly institucionesService = inject(InstitucionesService);
-  private readonly cargosService = inject(CargosService);
-  private readonly resolucionesService = inject(ResolucionesService);
   private readonly alertService = inject(AlertService);
+  private loadingOpciones = false;
 
   isOpen = input.required<boolean>();
   closed = output<void>();
@@ -306,44 +307,60 @@ export class ExportDialogComponent implements OnInit {
     ...this.resoluciones().map((r) => ({ id: r.id, label: r.nombre })),
   ]);
 
+  private readonly reloadOnOpen = effect(() => {
+    if (this.isOpen()) {
+      this.loadOpciones();
+    }
+  });
+
   ngOnInit() {
-    this.loadInstituciones();
-    this.loadCargos();
-    this.loadResoluciones();
+    this.loadOpciones();
   }
 
-  private loadInstituciones() {
-    this.institucionesService.getAll().subscribe({
+  loadOpciones() {
+    if (this.loadingOpciones) return;
+    this.loadingOpciones = true;
+    const params: Record<string, any> = {};
+    if (this.selectedResolucionId !== null) params['id_resolucion'] = this.selectedResolucionId;
+    if (this.selectedInstitucionId !== null) params['id_institucion'] = this.selectedInstitucionId;
+    if (this.selectedCargoId !== null) params['id_cargo'] = this.selectedCargoId;
+    if (this.selectedMotivo !== null) params['motivo'] = this.selectedMotivo;
+    if (this.selectedAnio.trim()) params['anio'] = this.selectedAnio.trim();
+
+    this.proyeccionesService.getOpcionesFiltros(params as any).subscribe({
       next: (res: any) => {
         const data = res.data;
+        // Actualizar opciones dependientes
         this.instituciones.set(
-          Array.isArray(data) ? data.map((i: any) => ({ id: i.id, nombre: i.nombre })) : []
+          Array.isArray(data.instituciones) ? data.instituciones.map((i: any) => ({ id: i.id, nombre: i.nombre })) : []
         );
-      },
-      error: () => {},
-    });
-  }
-
-  private loadCargos() {
-    this.cargosService.getAll().subscribe({
-      next: (res: any) => {
-        const data = res.data;
-        this.cargos.set(Array.isArray(data) ? data : [data]);
-      },
-      error: () => {},
-    });
-  }
-
-  private loadResoluciones() {
-    this.resolucionesService.getAll().subscribe({
-      next: (res: any) => {
-        const data = res.data;
+        this.cargos.set(
+          Array.isArray(data.cargos) ? data.cargos.map((c: any) => ({ id: c.id, nombre: c.nombre, codigo: c.codigo, tipo: c.tipo })) : []
+        );
         this.resoluciones.set(
-          Array.isArray(data) ? data.map((r: any) => ({ id: r.id, nombre: r.nombre })) : []
+          Array.isArray(data.resoluciones) ? data.resoluciones.map((r: any) => ({ id: r.id, nombre: r.nombre })) : []
         );
+        // Validar selecciones actuales — si ya no existen en las opciones filtradas, limpiar
+        if (this.selectedInstitucionId !== null && !this.instituciones().some(i => i.id === this.selectedInstitucionId)) {
+          this.selectedInstitucionId = null;
+        }
+        if (this.selectedCargoId !== null && !this.cargos().some(c => c.id === this.selectedCargoId)) {
+          this.selectedCargoId = null;
+        }
+        if (this.selectedResolucionId !== null && !this.resoluciones().some(r => r.id === this.selectedResolucionId)) {
+          // No limpiar resolucion si el filtro viene de ella misma — mantener
+        }
+        this.loadingOpciones = false;
       },
-      error: () => {},
+      error: () => {
+        this.loadingOpciones = false;
+      },
     });
+  }
+
+  onFilterChange() {
+    // Debounce simple con timeout para evitar spam en año
+    this.loadOpciones();
   }
 
   onCancel() {
