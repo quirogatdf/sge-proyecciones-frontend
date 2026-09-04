@@ -27,6 +27,8 @@ export interface ProyeccionQueryParams {
   per_page?: number;
   search?: string;
   id_nivel?: number | null;
+  id_resolucion?: number | null;
+  localidad?: string | null;
 }
 
 @Injectable({

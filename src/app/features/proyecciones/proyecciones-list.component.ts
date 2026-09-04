@@ -97,7 +97,7 @@ interface SelectOption {
         </button>
       </header>
 
-      <!-- Filtro por nivel -->
+      <!-- Filtros -->
       <div class="filters">
         <div class="filter-group">
           <label for="nivelFiltro">Filtrar por nivel:</label>
@@ -106,6 +106,24 @@ interface SelectOption {
             [options]="nivelesOptions()"
             placeholder="Todos los niveles"
             [(value)]="selectedNivelId"
+          />
+        </div>
+        <div class="filter-group">
+          <label for="resolucionFiltro">Filtrar por resolución:</label>
+          <app-searchable-select
+            id="resolucionFiltro"
+            [options]="resolucionesFilterOptions()"
+            placeholder="Todas las resoluciones"
+            [(value)]="selectedResolucionId"
+          />
+        </div>
+        <div class="filter-group">
+          <label for="localidadFiltro">Filtrar por localidad:</label>
+          <app-searchable-select
+            id="localidadFiltro"
+            [options]="localidadFilterOptions()"
+            placeholder="Todas las localidades"
+            [(value)]="selectedLocalidad"
           />
         </div>
       </div>
@@ -657,16 +675,19 @@ export class ProyeccionesListComponent implements OnInit {
   instituciones = signal<{ id: number; nombre: string }[]>([]);
   resoluciones = signal<{ id: number; nombre: string }[]>([]);
   selectedNivelId = signal<number | null>(null);
+  selectedResolucionId = signal<number | null>(null);
+  selectedLocalidad = signal<string | null>(null);
 
-  // Effect para filtrar automáticamente cuando cambia el nivel
-  private nivelFilterEffect = effect(() => {
+  // Effect para filtrar automáticamente cuando cambia nivel, resolución o localidad
+  private filtrosEffect = effect(() => {
+    const params: Record<string, unknown> = {};
     const nivelId = this.selectedNivelId();
-    // Update the wrapper service with the nivel filter
-    if (nivelId) {
-      this.proyeccionesServiceWrapper.setExtraParams({ id_nivel: nivelId });
-    } else {
-      this.proyeccionesServiceWrapper.setExtraParams({});
-    }
+    const resolucionId = this.selectedResolucionId();
+    const localidad = this.selectedLocalidad();
+    if (nivelId) params['id_nivel'] = nivelId;
+    if (resolucionId) params['id_resolucion'] = resolucionId;
+    if (localidad) params['localidad'] = localidad;
+    this.proyeccionesServiceWrapper.setExtraParams(params);
     if (this.crudTable) {
       this.crudTable.reloadData();
     }
@@ -690,6 +711,18 @@ export class ProyeccionesListComponent implements OnInit {
   readonly nivelesOptions = computed(() => [
     { id: null as unknown as number, label: 'Todos los niveles' },
     ...this.niveles().map((n) => ({ id: n.id, label: n.nombre })),
+  ]);
+
+  readonly resolucionesFilterOptions = computed(() => [
+    { id: null as unknown as number, label: 'Todas las resoluciones' },
+    ...this.resoluciones().map((r) => ({ id: r.id, label: r.nombre })),
+  ]);
+
+  readonly localidadFilterOptions = signal<SelectOption[]>([
+    { id: null as unknown as string, label: 'Todas las localidades' },
+    { id: 'Rio Grande', label: 'Río Grande' },
+    { id: 'Ushuaia', label: 'Ushuaia' },
+    { id: 'Tolhuin', label: 'Tolhuin' },
   ]);
 
   readonly institucionesOptions = computed(() =>
