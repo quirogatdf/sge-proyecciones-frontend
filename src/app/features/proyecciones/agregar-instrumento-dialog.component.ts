@@ -69,7 +69,8 @@ interface SelectOption {
                   type="radio"
                   name="modo"
                   [value]="'copiar_anterior'"
-                  [(ngModel)]="modo"
+                  [ngModel]="modo()"
+                  (ngModelChange)="onModoChange($event)"
                 />
                 <span>
                   <strong>Copiar del último año</strong>
@@ -82,7 +83,8 @@ interface SelectOption {
                   type="radio"
                   name="modo"
                   [value]="'historial'"
-                  [(ngModel)]="modo"
+                  [ngModel]="modo()"
+                  (ngModelChange)="onModoChange($event)"
                 />
                 <span>
                   <strong>Elegir del historial</strong>
@@ -90,8 +92,8 @@ interface SelectOption {
                 </span>
               </label>
 
-              @if (modo === 'historial') {
-                <select class="historial-select" [(ngModel)]="anioHistorial">
+              @if (modo() === 'historial') {
+                <select class="historial-select" [ngModel]="anioHistorial()" (ngModelChange)="onAnioHistorialChange($event)">
                   @for (anioItem of historialAnios(); track anioItem) {
                     <option [ngValue]="anioItem">{{ anioItem }}</option>
                   }
@@ -103,7 +105,8 @@ interface SelectOption {
                   type="radio"
                   name="modo"
                   [value]="'nuevo'"
-                  [(ngModel)]="modo"
+                  [ngModel]="modo()"
+                  (ngModelChange)="onModoChange($event)"
                 />
                 <span>
                   <strong>Crear en blanco</strong>
@@ -565,8 +568,8 @@ export class AgregarInstrumentoDialogComponent {
   closed = output<void>();
   saved = output<void>();
 
-  modo: ModoAgregar = 'copiar_anterior';
-  anioHistorial: number | null = null;
+  modo = signal<ModoAgregar>('copiar_anterior');
+  anioHistorial = signal<number | null>(null);
   saving = signal(false);
 
   form = {
@@ -690,9 +693,9 @@ export class AgregarInstrumentoDialogComponent {
       void resolucion_ministerial;
     } else {
       // Modo agregar: año sugerido + datos base según el origen elegido
-      this.modo = 'copiar_anterior';
+      this.modo.set('copiar_anterior');
       const anios = this.historialAnios();
-      this.anioHistorial = anios.length > 0 ? anios[0] : null;
+      this.anioHistorial.set(anios.length > 0 ? anios[0] : null);
       this.form.anio = this.anioSugerido();
       this.aplicarOrigenAlForm();
     }
@@ -710,7 +713,7 @@ export class AgregarInstrumentoDialogComponent {
       ...this.form,
       // En "crear en blanco" el año también arranca vacío; en los otros
       // modos se sugiere el próximo año disponible.
-      anio: this.modo === 'nuevo' ? '' : this.anioSugerido(),
+      anio: this.modo() === 'nuevo' ? '' : this.anioSugerido(),
       estado: base.estado ?? null,
       motivo: base.motivo ?? null,
       n_expediente: base.n_expediente ?? null,
@@ -735,19 +738,22 @@ export class AgregarInstrumentoDialogComponent {
     };
   }
 
-  /** Al cambiar el modo de origen (agregar), re-cargar los campos. */
-  private readonly origenEffect = effect(() => {
-    // Lee dependencias para que el effect se re-ejecute al cambiarlas
-    const modo = this.modo;
-    const anioHistorial = this.anioHistorial;
-    if (this.isOpen() && !this.editando() && !this.saving()) {
-      queueMicrotask(() => {
-        if (modo !== undefined && (modo === 'historial' ? anioHistorial !== null : true)) {
-          this.aplicarOrigenAlForm();
-        }
-      });
-    }
-  });
+  /** Al cambiar el modo de origen o el año del historial (solo agregar),
+   *  re-cargar los campos. Se dispara desde el template con (ngModelChange)
+   *  porque el componente es zoneless: un effect no garantiza el re-render. */
+  onModoChange(modo: ModoAgregar): void {
+    this.modo.set(modo);
+    if (!this.isOpen() || this.editando() || this.saving()) return;
+    if (modo === 'historial' && this.anioHistorial() === null) return;
+    this.aplicarOrigenAlForm();
+  }
+
+  onAnioHistorialChange(anio: number | null): void {
+    this.anioHistorial.set(anio);
+    if (!this.isOpen() || this.editando() || this.saving()) return;
+    if (this.modo() !== 'historial' || anio === null) return;
+    this.aplicarOrigenAlForm();
+  }
 
   private loadCatalogos(): void {
     this.cargosService.getAll().subscribe({
@@ -816,13 +822,13 @@ export class AgregarInstrumentoDialogComponent {
   }
 
   private buscarSnapshotBase(): Partial<PayloadProyeccionInstrumento> {
-    if (this.modo === 'nuevo') {
+    if (this.modo() === 'nuevo') {
       // Crear en blanco: formulario vacío, no se copia nada.
       return {};
     }
     const anioOrigen =
-      this.modo === 'historial'
-        ? this.anioHistorial
+      this.modo() === 'historial'
+        ? this.anioHistorial()
         : this.historialAnios()[0] ?? null;
     const snapshot = this.snapshotDeAnio(anioOrigen);
     if (!snapshot) {
@@ -938,7 +944,7 @@ export class AgregarInstrumentoDialogComponent {
     }
 
     // Agregar: el formulario ya viene precargado según el origen elegido
-    if (this.modo === 'historial' && this.anioHistorial === null) {
+    if (this.modo() === 'historial' && this.anioHistorial() === null) {
       this.anioError.set('Seleccioná un año del historial.');
       return;
     }
