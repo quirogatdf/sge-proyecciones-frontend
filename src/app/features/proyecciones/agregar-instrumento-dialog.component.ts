@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProyeccionesService } from '../../core/services/proyecciones.service';
@@ -69,8 +69,8 @@ interface SelectOption {
                   type="radio"
                   name="modo"
                   [value]="'copiar_anterior'"
-                  [ngModel]="modo()"
-                  (ngModelChange)="onModoChange($event)"
+                  [checked]="modo() === 'copiar_anterior'"
+                  (change)="onModoChange('copiar_anterior')"
                 />
                 <span>
                   <strong>Copiar del último año</strong>
@@ -83,8 +83,8 @@ interface SelectOption {
                   type="radio"
                   name="modo"
                   [value]="'historial'"
-                  [ngModel]="modo()"
-                  (ngModelChange)="onModoChange($event)"
+                  [checked]="modo() === 'historial'"
+                  (change)="onModoChange('historial')"
                 />
                 <span>
                   <strong>Elegir del historial</strong>
@@ -105,8 +105,8 @@ interface SelectOption {
                   type="radio"
                   name="modo"
                   [value]="'nuevo'"
-                  [ngModel]="modo()"
-                  (ngModelChange)="onModoChange($event)"
+                  [checked]="modo() === 'nuevo'"
+                  (change)="onModoChange('nuevo')"
                 />
                 <span>
                   <strong>Crear en blanco</strong>
@@ -651,8 +651,10 @@ export class AgregarInstrumentoDialogComponent {
 
   private readonly resetOnOpen = effect(() => {
     if (this.isOpen()) {
-      this.reset();
-      this.loadCatalogos();
+      untracked(() => {
+        this.reset();
+        this.loadCatalogos();
+      });
     }
   });
 
