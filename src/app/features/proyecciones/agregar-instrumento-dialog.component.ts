@@ -107,7 +107,7 @@ interface SelectOption {
                 />
                 <span>
                   <strong>Crear en blanco</strong>
-                  <small>Arrancá con los datos de la proyección actual y ajustá lo que cambie.</small>
+                  <small>Arrancá con el formulario vacío y cargá los datos del año nuevo.</small>
                 </span>
               </label>
             </div>
@@ -708,6 +708,9 @@ export class AgregarInstrumentoDialogComponent {
     const base = this.buscarSnapshotBase();
     this.form = {
       ...this.form,
+      // En "crear en blanco" el año también arranca vacío; en los otros
+      // modos se sugiere el próximo año disponible.
+      anio: this.modo === 'nuevo' ? '' : this.anioSugerido(),
       estado: base.estado ?? null,
       motivo: base.motivo ?? null,
       n_expediente: base.n_expediente ?? null,
@@ -814,7 +817,8 @@ export class AgregarInstrumentoDialogComponent {
 
   private buscarSnapshotBase(): Partial<PayloadProyeccionInstrumento> {
     if (this.modo === 'nuevo') {
-      return this.baseDeProyeccion();
+      // Crear en blanco: formulario vacío, no se copia nada.
+      return {};
     }
     const anioOrigen =
       this.modo === 'historial'
