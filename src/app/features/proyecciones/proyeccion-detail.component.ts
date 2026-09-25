@@ -1,12 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProyeccionesService, Proyeccion } from '../../core/services/proyecciones.service';
+import { ProyeccionesService, Proyeccion, ProyeccionInstrumento } from '../../core/services/proyecciones.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AgregarInstrumentoDialogComponent } from './agregar-instrumento-dialog.component';
 
 @Component({
   selector: 'app-proyeccion-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AgregarInstrumentoDialogComponent],
   template: `
     <div class="page">
       <header class="page-header">
@@ -187,7 +188,99 @@ import { ActivatedRoute, Router } from '@angular/router';
               </div>
             </div>
           </div>
+
+          <div class="detail-section">
+            <div class="section-header">
+              <h2>Historial de Instrumentos</h2>
+            </div>
+
+            @if (loadingInstrumentos()) {
+              <p class="muted-text">Cargando historial...</p>
+            } @else {
+              <div class="table-wrapper">
+                <table class="historial-table">
+                  <thead>
+                    <tr>
+                      <th>Año</th>
+                      <th>Instrumento legal</th>
+                      <th>Cargo</th>
+                      <th>Función</th>
+                      <th>Turno</th>
+                      <th>Horas</th>
+                      <th>Cargos</th>
+                      <th>Destino anterior</th>
+                      <th>Destino nuevo</th>
+                      <th>Observaciones</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (inst of instrumentos(); track inst.id) {
+                      <tr>
+                        <td class="anio-cell">{{ inst.anio }}</td>
+                        <td>
+                          <div class="instrumento-legal">
+                            <span>{{ inst.resolucion?.nombre || inst.resolucion_ministerial || '-' }}</span>
+                            @if (inst.orden) {
+                              <small>Orden {{ inst.orden }}</small>
+                            }
+                          </div>
+                        </td>
+                        <td>{{ inst.cargo?.nombre || '-' }}</td>
+                        <td>{{ inst.funcion?.nombre || '-' }}</td>
+                        <td>{{ inst.turno?.nombre || '-' }}</td>
+                        <td>{{ inst.horar ?? '-' }}</td>
+                        <td>{{ inst.cargos ?? '-' }}</td>
+                        <td>{{ inst.destino_anterior || '-' }}</td>
+                        <td>{{ inst.destino_nuevo || '-' }}</td>
+                        <td>{{ inst.observaciones || '-' }}</td>
+                        <td>
+                          @if (inst.resolucion?.url) {
+                            <a
+                              class="pdf-link"
+                              [href]="inst.resolucion!.url!"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Abrir PDF de la resolución"
+                            >
+                              PDF
+                            </a>
+                          } @else {
+                            <span class="muted-text">-</span>
+                          }
+                        </td>
+                        <td>
+                          <button
+                            class="btn-edit"
+                            (click)="editarInstrumento(inst)"
+                            title="Editar instrumento del año {{ inst.anio }}"
+                          >
+                            ✎ Editar
+                          </button>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="12" class="empty-row">
+                          Sin historial todavía — agregá el primer año desde "Editar" en el listado.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
         </div>
+
+        <app-agregar-instrumento-dialog
+          [isOpen]="dialogOpen()"
+          [proyeccion]="proyeccion()"
+          [instrumentos]="instrumentos()"
+          [editando]="editandoInstrumento()"
+          (closed)="cerrarDialogo()"
+          (saved)="onInstrumentosSaved()"
+        />
       }
     </div>
   `,
@@ -348,6 +441,140 @@ import { ActivatedRoute, Router } from '@angular/router';
       background: var(--accent);
       color: var(--foreground);
     }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--primary-foreground);
+      background: var(--primary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-header h2 {
+      margin: 0;
+    }
+
+    .muted-text {
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    .historial-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    .historial-table th,
+    .historial-table td {
+      padding: 0.5rem 0.75rem;
+      text-align: start;
+      vertical-align: top;
+      border-block-end: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .historial-table th {
+      font-weight: 600;
+      color: var(--muted-foreground);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+    }
+
+    .historial-table tbody tr:hover {
+      background: var(--accent);
+    }
+
+    .anio-cell {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .instrumento-legal {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .instrumento-legal small {
+      font-size: 0.7rem;
+      color: var(--muted-foreground);
+    }
+
+    .empty-row {
+      text-align: center;
+      color: var(--muted-foreground);
+      padding: 2rem 1rem !important;
+      white-space: normal !important;
+    }
+
+    .pdf-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--primary);
+      text-decoration: none;
+      border: 1px solid color-mix(in oklch, var(--primary) 40%, transparent);
+      border-radius: var(--radius);
+      padding: 0.2rem 0.5rem;
+    }
+
+    .pdf-link:hover {
+      background: color-mix(in oklch, var(--primary) 10%, transparent);
+    }
+
+    .btn-edit {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--foreground);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-edit:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: color-mix(in oklch, var(--primary) 8%, transparent);
+    }
   `]
 })
 export class ProyeccionDetailComponent {
@@ -359,6 +586,11 @@ export class ProyeccionDetailComponent {
   loading = signal(false);
   error = signal(false);
   errorMessage = signal('');
+
+  instrumentos = signal<ProyeccionInstrumento[]>([]);
+  loadingInstrumentos = signal(false);
+  dialogOpen = signal(false);
+  editandoInstrumento = signal<ProyeccionInstrumento | null>(null);
 
   constructor() {
     this.loadProyeccion();
@@ -385,6 +617,7 @@ export class ProyeccionDetailComponent {
         const data = res.data;
         this.proyeccion.set(data as Proyeccion);
         this.loading.set(false);
+        this.loadInstrumentos(id);
       },
       error: (err: any) => {
         console.error('Error cargando detalle de proyección:', err);
@@ -393,6 +626,43 @@ export class ProyeccionDetailComponent {
         this.loading.set(false);
       }
     });
+  }
+
+  private loadInstrumentos(proyeccionId: number): void {
+    this.loadingInstrumentos.set(true);
+    this.proyeccionesService.getInstrumentos(proyeccionId).subscribe({
+      next: (res: any) => {
+        const data = res.data;
+        this.instrumentos.set(Array.isArray(data) ? data : []);
+        this.loadingInstrumentos.set(false);
+      },
+      error: (err: any) => {
+        console.error('Error cargando historial de instrumentos:', err);
+        this.instrumentos.set([]);
+        this.loadingInstrumentos.set(false);
+      }
+    });
+  }
+
+  reloadInstrumentos(): void {
+    const proyeccionId = this.proyeccion()?.id;
+    if (proyeccionId) {
+      this.loadInstrumentos(proyeccionId);
+    }
+  }
+
+  onInstrumentosSaved(): void {
+    this.reloadInstrumentos();
+  }
+
+  editarInstrumento(inst: ProyeccionInstrumento): void {
+    this.editandoInstrumento.set(inst);
+    this.dialogOpen.set(true);
+  }
+
+  cerrarDialogo(): void {
+    this.dialogOpen.set(false);
+    this.editandoInstrumento.set(null);
   }
 
   volverLista() {

@@ -193,7 +193,7 @@ import { SearchableSelectComponent } from '../shared/components/searchable-selec
                 [ngModel]="statsSelectedAnio()"
                 (ngModelChange)="statsSelectedAnio.set($event)"
               >
-                <option value="">-- Todos los años --</option>
+                <option value="">-- Último año con datos --</option>
                 @for (anio of years(); track anio) {
                   <option [value]="anio">{{ anio }}</option>
                 }
@@ -249,18 +249,21 @@ export class DashboardPage {
   readonly selectedInstitucionId = signal<string>(''); // Default: empty = all
   readonly cargosByYear = signal<CargosByYear>([]);
   readonly cargosByNivel = signal<CargosByNivel>([]);
-  readonly selectedCargosNivelAnio = signal<string>(new Date().getFullYear().toString());
+
+  /** Año calendario actual — default de los selectores de año. */
+  readonly anioActualStr = new Date().getFullYear().toString();
+  readonly selectedCargosNivelAnio = signal<string>(this.anioActualStr);
   readonly loading = signal(true);
 
   // Signals for "Horas" charts
   readonly horasByYear = signal<HorasByYear>([]);
   readonly selectedHorasInstitucionId = signal<string>(''); // Default: empty = all
   readonly horasByNivel = signal<HorasByNivel>([]);
-  readonly selectedHorasNivelAnio = signal<string>(new Date().getFullYear().toString());
+  readonly selectedHorasNivelAnio = signal<string>(this.anioActualStr);
 
   // Signals for "Proyecciones por Institución" chart
   readonly years = signal<string[]>([]);
-  readonly statsSelectedAnio = signal<string>(''); // Default: empty = all
+  readonly statsSelectedAnio = signal<string>(this.anioActualStr); // Default: año actual
   readonly statsSelectedInstitucionId = signal<string>(''); // Default: empty = all years
   readonly statsByInstitucion = signal<StatsByInstitucion>([]);
 
@@ -382,16 +385,16 @@ export class DashboardPage {
   }
 
   private loadYears(): void {
-    // Extract distinct years from all proyecciones
-    this.proyeccionesService.getAllForDashboard().subscribe({
+    // Con el contrato nuevo el listado expone una fila por plaza con un único
+    // año en foco: los años disponibles vienen en meta.anios_disponibles.
+    this.proyeccionesService.getAll({ page: 1, per_page: 1 }).subscribe({
       next: (response) => {
-        const proyecciones = Array.isArray(response.data) ? response.data : [response.data];
-        const distinctYears = [
-          ...new Set(
-            proyecciones.map((p) => p.año).filter((y): y is string => !!y && y.trim() !== ''),
-          ),
-        ];
-        this.years.set(distinctYears.sort((a, b) => parseInt(b) - parseInt(a))); // newest first
+        const anios = response.meta?.anios_disponibles ?? [];
+        // Garantizar que el año actual esté siempre en las opciones (aunque no tenga datos)
+        const merged = anios.includes(this.anioActualStr)
+          ? anios
+          : [this.anioActualStr, ...anios];
+        this.years.set(merged); // ordenados descendente
       },
       error: (err: unknown) => {
         console.error('Error loading years:', err);

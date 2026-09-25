@@ -2,7 +2,12 @@ import { Component, inject, signal, computed, effect, ViewChild, OnInit } from '
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ProyeccionesService, Proyeccion } from '../../core/services/proyecciones.service';
+import {
+  ProyeccionesService,
+  Proyeccion,
+  ProyeccionInstrumento,
+} from '../../core/services/proyecciones.service';
+import { PayloadProyeccionConInstrumento, PayloadProyeccionPlaza } from '../../shared/models/proyeccion';
 import { NivelesService } from '../../core/services/niveles.service';
 import { CargosService, Cargo } from '../../core/services/cargos.service';
 import { FuncionesService } from '../../core/services/funciones.service';
@@ -13,12 +18,19 @@ import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
 import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
 import { ExportDialogComponent } from './export-dialog.component';
+import { AgregarInstrumentoDialogComponent } from './agregar-instrumento-dialog.component';
 import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
 import { Observable } from 'rxjs';
 
 // Servicio wrapper que transforma los datos para agregar campos de localidad y nombre de institución
 class ProyeccionesServiceWrapper {
   private extraParams: Record<string, unknown> = {};
+
+  /** Año en foco del último listado (default: último año con datos). */
+  readonly anioActual = signal<string | null>(null);
+
+  /** Años disponibles en todo el historial, ordenados descendente. */
+  readonly aniosDisponibles = signal<string[]>([]);
 
   constructor(private proyeccionesService: ProyeccionesService) {}
 
@@ -35,6 +47,9 @@ class ProyeccionesServiceWrapper {
     return new Observable<{ data: any; meta: any }>(observer => {
       this.proyeccionesService.getAll(mergedParams).subscribe({
         next: (res: any) => {
+          // Exponer el año en foco / años disponibles (del meta del backend)
+          this.anioActual.set(res.meta?.anio ?? null);
+          this.aniosDisponibles.set(Array.isArray(res.meta?.anios_disponibles) ? res.meta.anios_disponibles : []);
           // Transformar los datos para agregar campos calculados
           const transformedData = res.data.map((proyeccion: any) => {
             const horar = proyeccion.horar != null ? Number(proyeccion.horar) : 0;
@@ -82,7 +97,7 @@ interface SelectOption {
 @Component({
   selector: 'app-proyecciones-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, CrudTableComponent, SearchableSelectComponent, ExportDialogComponent],
+  imports: [CommonModule, FormsModule, CrudTableComponent, SearchableSelectComponent, ExportDialogComponent, AgregarInstrumentoDialogComponent],
   template: `
     <div class="page">
       <header class="page-header">
@@ -126,6 +141,15 @@ interface SelectOption {
             [(value)]="selectedLocalidad"
           />
         </div>
+        <div class="filter-group">
+          <label for="anioFiltro">Año:</label>
+          <app-searchable-select
+            id="anioFiltro"
+            [options]="aniosFilterOptions()"
+            placeholder="Año actual"
+            [(value)]="selectedAnio"
+          />
+        </div>
       </div>
 
       <app-crud-table
@@ -133,13 +157,30 @@ interface SelectOption {
         [config]="tableConfig"
         [service]="proyeccionesServiceWrapper"
         [saving]="saving"
+        [saveLabel]="saveLabel()"
         (modalOpened)="onModalOpened($event)"
         (save)="onSave(crudTable)"
         (viewDetail)="onViewDetail($event)"
       >
         <div form-content>
-          <!-- Información básica -->
-          <h3 class="section-title">Información Básica</h3>
+          <!-- Stepper (solo al CREAR: el alta es en dos pasos) -->
+          @if (!editingId()) {
+            <div class="stepper">
+              <div class="step" [class.active]="pasoCreacion() === 1">
+                <span class="step-num">1</span>
+                <span class="step-label">Plaza</span>
+              </div>
+              <div class="step-sep"></div>
+              <div class="step" [class.active]="pasoCreacion() === 2">
+                <span class="step-num">2</span>
+                <span class="step-label">Instrumento del año</span>
+              </div>
+            </div>
+          }
+
+          <!-- PASO 1 (alta) o EDICIÓN: datos de la plaza -->
+          @if (editingId() || pasoCreacion() === 1) {
+            <h3 class="section-title">Información Básica</h3>
 
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasFieldError('id_nivel')">
@@ -188,7 +229,14 @@ interface SelectOption {
               />
             </div>
           </div>
+          }
 
+          <!-- ============================================================
+               PASO 2 (alta): instrumento del año.
+               La edición del instrumento se hace desde este mismo modal
+               al editar (sección Historial de instrumentos).
+               ============================================================ -->
+          @if (!editingId() && pasoCreacion() === 2) {
           <div class="form-row">
             <div class="form-group" [class.has-error]="hasFieldError('estado')">
               <label for="estado">Estado *</label>
@@ -463,8 +511,92 @@ interface SelectOption {
               />
             </div>
           </div>
+
+          <div class="wizard-nav">
+            <button type="button" class="btn-inline-secondary" (click)="irAPaso(1)">
+              ← Volver a la plaza
+            </button>
+          </div>
+          }
+
+          <!-- ============================================================
+               Historial de instrumentos (solo al EDITAR la plaza).
+               Permite ver y modificar el snapshot de cada año.
+               ============================================================ -->
+          @if (editingId()) {
+            <div class="historial-header">
+              <h3 class="section-title">Historial de instrumentos</h3>
+              <button type="button" class="btn-inline" (click)="agregarAnio()">
+                ⊕ Agregar año
+              </button>
+            </div>
+
+            @if (loadingHistorial()) {
+              <p class="muted-text">Cargando historial...</p>
+            } @else {
+              <div class="table-wrapper">
+                <table class="historial-table">
+                  <thead>
+                    <tr>
+                      <th>Año</th>
+                      <th>Instrumento legal</th>
+                      <th>Cargo</th>
+                      <th>Horas</th>
+                      <th>Cargos</th>
+                      <th>Estado</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (inst of historialInstrumentos(); track inst.id) {
+                      <tr>
+                        <td class="anio-cell">{{ inst.anio }}</td>
+                        <td>
+                          <div class="instrumento-legal">
+                            <span>{{ inst.resolucion?.nombre || inst.resolucion_ministerial || '-' }}</span>
+                            @if (inst.orden) {
+                              <small>Orden {{ inst.orden }}</small>
+                            }
+                          </div>
+                        </td>
+                        <td>{{ inst.cargo?.nombre || '-' }}</td>
+                        <td>{{ inst.horar ?? '-' }}</td>
+                        <td>{{ inst.cargos ?? '-' }}</td>
+                        <td>{{ inst.estado || '-' }}</td>
+                        <td>
+                          <button
+                            type="button"
+                            class="btn-edit"
+                            (click)="editarInstrumento(inst)"
+                            title="Editar instrumento del año {{ inst.anio }}"
+                          >
+                            ✎ Editar
+                          </button>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="7" class="empty-row">
+                          Sin historial todavía — usá "Agregar año" para registrar el primero.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
         </div>
       </app-crud-table>
+
+      <app-agregar-instrumento-dialog
+        [isOpen]="dialogInstrumentoOpen()"
+        [proyeccion]="proyeccionSeleccionada()"
+        [instrumentos]="historialInstrumentos()"
+        [editando]="editandoInstrumento()"
+        (closed)="cerrarDialogoInstrumento()"
+        (saved)="onInstrumentoSaved()"
+      />
 
       <app-export-dialog
         [isOpen]="exportDialogOpen()"
@@ -643,6 +775,196 @@ interface SelectOption {
         background-color: color-mix(in oklch, var(--warning, #f59e0b) 15%, transparent);
         color: var(--warning, #f59e0b);
       }
+
+      .stepper {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+      }
+
+      .step.active {
+        opacity: 1;
+      }
+
+      .step-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 9999px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--muted-foreground);
+        background: var(--muted);
+        border: 1px solid var(--border);
+      }
+
+      .step.active .step-num {
+        color: var(--primary-foreground);
+        background: var(--primary);
+        border-color: var(--primary);
+      }
+
+      .step-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--foreground);
+        white-space: nowrap;
+      }
+
+      .step-sep {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+        min-width: 1.5rem;
+      }
+
+      .wizard-nav {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 0.5rem;
+      }
+
+      .btn-inline-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.85rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--foreground);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .btn-inline-secondary:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+
+      .historial-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .historial-header .section-title {
+        flex: 1;
+        margin-bottom: 0;
+      }
+
+      .btn-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--primary-foreground);
+        background: var(--primary);
+        border: none;
+        border-radius: var(--radius);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: filter 0.15s ease;
+      }
+
+      .btn-inline:hover {
+        filter: brightness(1.1);
+      }
+
+      .muted-text {
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      .historial-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+      }
+
+      .historial-table th,
+      .historial-table td {
+        padding: 0.5rem 0.75rem;
+        text-align: start;
+        vertical-align: top;
+        border-block-end: 1px solid var(--border);
+        white-space: nowrap;
+      }
+
+      .historial-table th {
+        font-weight: 600;
+        color: var(--muted-foreground);
+        background: var(--surface);
+      }
+
+      .historial-table tbody tr:hover {
+        background: var(--accent);
+      }
+
+      .anio-cell {
+        font-weight: 600;
+        color: var(--primary);
+      }
+
+      .instrumento-legal {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+
+      .instrumento-legal small {
+        font-size: 0.7rem;
+        color: var(--muted-foreground);
+      }
+
+      .empty-row {
+        text-align: center;
+        color: var(--muted-foreground);
+        padding: 2rem 1rem !important;
+        white-space: normal !important;
+      }
+
+      .btn-edit {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--foreground);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.2rem 0.5rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+
+      .btn-edit:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: color-mix(in oklch, var(--primary) 8%, transparent);
+      }
     `,
   ],
 })
@@ -678,15 +1000,37 @@ export class ProyeccionesListComponent implements OnInit {
   selectedResolucionId = signal<number | null>(null);
   selectedLocalidad = signal<string | null>(null);
 
-  // Effect para filtrar automáticamente cuando cambia nivel, resolución o localidad
+  /** Año calendario actual — default del selector de año. */
+  readonly anioActualStr = new Date().getFullYear().toString();
+  selectedAnio = signal<string | null>(this.anioActualStr);
+
+  // Historial de instrumentos de la plaza en edición (modal de editar)
+  historialInstrumentos = signal<ProyeccionInstrumento[]>([]);
+  loadingHistorial = signal(false);
+  proyeccionSeleccionada = signal<Proyeccion | null>(null);
+  dialogInstrumentoOpen = signal(false);
+  editandoInstrumento = signal<ProyeccionInstrumento | null>(null);
+
+  /** Paso del alta (solo al crear): 1 = plaza, 2 = instrumento del año. */
+  pasoCreacion = signal<1 | 2>(1);
+
+  /** Texto del botón de guardar del modal, según el paso / modo. */
+  readonly saveLabel = computed(() => {
+    if (this.editingId()) return 'Guardar';
+    return this.pasoCreacion() === 1 ? 'Siguiente' : 'Crear proyección';
+  });
+
+  // Effect para filtrar automáticamente cuando cambia nivel, resolución, localidad o año
   private filtrosEffect = effect(() => {
     const params: Record<string, unknown> = {};
     const nivelId = this.selectedNivelId();
     const resolucionId = this.selectedResolucionId();
     const localidad = this.selectedLocalidad();
+    const anio = this.selectedAnio();
     if (nivelId) params['id_nivel'] = nivelId;
     if (resolucionId) params['id_resolucion'] = resolucionId;
     if (localidad) params['localidad'] = localidad;
+    if (anio) params['anio'] = anio;
     this.proyeccionesServiceWrapper.setExtraParams(params);
     if (this.crudTable) {
       this.crudTable.reloadData();
@@ -724,6 +1068,19 @@ export class ProyeccionesListComponent implements OnInit {
     { id: 'Ushuaia', label: 'Ushuaia' },
     { id: 'Tolhuin', label: 'Tolhuin' },
   ]);
+
+  /** Opciones del selector de año (default: año actual). */
+  readonly aniosFilterOptions = computed<SelectOption[]>(() => {
+    const disponibles = this.proyeccionesServiceWrapper.aniosDisponibles();
+    // Garantizar que el año actual esté siempre en las opciones (aunque no tenga datos)
+    const anios = disponibles.includes(this.anioActualStr)
+      ? disponibles
+      : [this.anioActualStr, ...disponibles];
+    return [
+      { id: null as unknown as string, label: 'Último año con datos' },
+      ...anios.map((anio) => ({ id: anio, label: anio })),
+    ];
+  });
 
   readonly institucionesOptions = computed(() =>
     this.instituciones().map((i) => ({ id: i.id, label: i.nombre })),
@@ -770,6 +1127,9 @@ export class ProyeccionesListComponent implements OnInit {
     searchPlaceholder: 'Buscar proyecciones...',
     showViewDetail: true,
     serverSide: true,
+    createButtonLabel: 'Nueva Proyección',
+    createTitle: 'Nueva Proyección',
+    editTitle: 'Editar Proyección',
     columns: [
       { key: 'id', label: 'ID', sortable: true },
       {
@@ -971,6 +1331,15 @@ export class ProyeccionesListComponent implements OnInit {
     this.submitted.set(false);
     this.formErrors.set({});
     this.editingId.set(item?.id || null);
+    this.pasoCreacion.set(1);
+    this.proyeccionSeleccionada.set(item);
+    this.cerrarDialogoInstrumento();
+
+    if (item?.id) {
+      this.loadHistorial(item.id);
+    } else {
+      this.historialInstrumentos.set([]);
+    }
 
     if (item) {
       // Editando - cargar todos los campos
@@ -1034,15 +1403,33 @@ export class ProyeccionesListComponent implements OnInit {
 
   onSave(crudTable: any) {
     this.submitted.set(true);
+    const isEditing = this.editingId() !== null;
 
-    // Validación básica
+    // Validación básica de la plaza (aplica en ambos pasos del alta y al editar)
     const errors: Record<string, string[]> = {};
     if (!this.formData.id_nivel) errors['id_nivel'] = ['El nivel es obligatorio'];
-    if (!this.formData.estado) errors['estado'] = ['El estado es obligatorio'];
-    if (!this.formData.motivo) errors['motivo'] = ['El motivo es obligatorio'];
-    if (!this.formData.fecha_desde) errors['fecha_desde'] = ['La fecha desde es obligatoria'];
     if (!this.formData.id_institucion) errors['id_institucion'] = ['La institución es obligatoria'];
-    if (!this.formData.destino_nuevo) errors['destino_nuevo'] = ['El destino nuevo es obligatorio'];
+
+    // Alta en dos pasos: en el paso 1 solo se valida la plaza y se avanza al paso 2.
+    if (!isEditing && this.pasoCreacion() === 1) {
+      if (Object.keys(errors).length > 0) {
+        this.formErrors.set(errors);
+        return;
+      }
+      this.formErrors.set({});
+      this.pasoCreacion.set(2);
+      return;
+    }
+
+    // Los campos del instrumento solo se validan/solicitan al CREAR (paso 2).
+    // Al editar, solo se actualiza la plaza (el instrumento se edita en el historial).
+    if (!isEditing) {
+      if (!this.formData.estado) errors['estado'] = ['El estado es obligatorio'];
+      if (!this.formData.motivo) errors['motivo'] = ['El motivo es obligatorio'];
+      if (!this.formData['año']) errors['año'] = ['El año es obligatorio'];
+      if (!this.formData.fecha_desde) errors['fecha_desde'] = ['La fecha desde es obligatoria'];
+      if (!this.formData.destino_nuevo) errors['destino_nuevo'] = ['El destino nuevo es obligatorio'];
+    }
 
     if (Object.keys(errors).length > 0) {
       this.formErrors.set(errors);
@@ -1052,16 +1439,43 @@ export class ProyeccionesListComponent implements OnInit {
     this.saving.set(true);
     this.formErrors.set({});
 
-    // Limpiar formData: eliminar campos vacíos o null para evitar errores 422
-    const cleanedData = Object.fromEntries(
-      Object.entries(this.formData).filter(([_, value]) => value !== '' && value !== null),
-    );
-    console.log('Enviando cleanedData:', JSON.stringify(cleanedData, null, 2));
+    // Limpiar valores vacíos para evitar errores 422
+    const clean = <T extends Record<string, unknown>>(data: T): Partial<T> =>
+      Object.fromEntries(
+        Object.entries(data).filter(([_, value]) => value !== '' && value !== null),
+      ) as Partial<T>;
 
-    const isEditing = this.editingId() !== null;
+    // La plaza (vive en `proyecciones`)
+    const plaza: PayloadProyeccionPlaza = {
+      id_nivel: this.formData.id_nivel ?? null,
+      id_institucion: this.formData.id_institucion ?? null,
+      id_puesto: this.formData.id_puesto || null,
+    };
+
+    // Sobre los campos del instrumento (los que acepta el backend para crear)
+    const camposInstrumento = [
+      'estado', 'motivo', 'n_expediente', 'orden', 'fecha_desde', 'fecha_hasta',
+      'horar', 'cargos', 'id_cargo', 'id_funcion', 'id_turno', 'id_resolucion',
+      'resolucion_ministerial_ext', 'disposicion_sgnij', 'rect_disposoco_sgnij',
+      'resolucion_previa_continuidad', 'resolucion_ministerial_rect1',
+      'resolucion_ministerial_rect2', 'destino_anterior', 'destino_nuevo',
+    ];
+    const instrumento = clean({
+      anio: this.formData['año'],
+      ...Object.fromEntries(
+        camposInstrumento.map((campo) => [campo, this.formData[campo]]),
+      ),
+    });
+
+    const payload = isEditing
+      ? plaza // update: solo la plaza
+      : ({ ...plaza, instrumento } as PayloadProyeccionConInstrumento); // create: plaza + primer instrumento atómico
+
+    console.log('Enviando payload:', JSON.stringify(payload, null, 2));
+
     const request = isEditing
-      ? this.proyeccionesService.update(this.editingId()!, cleanedData)
-      : this.proyeccionesService.create(cleanedData);
+      ? this.proyeccionesService.update(this.editingId()!, payload)
+      : this.proyeccionesService.create(payload);
 
     request.subscribe({
       next: (res: any) => {
@@ -1105,6 +1519,56 @@ export class ProyeccionesListComponent implements OnInit {
       const newErrors = { ...this.formErrors() };
       delete newErrors[field];
       this.formErrors.set(newErrors);
+    }
+  }
+
+  /** Navega entre los pasos del alta (solo al crear). */
+  irAPaso(paso: 1 | 2): void {
+    this.pasoCreacion.set(paso);
+  }
+
+  /** Carga el historial de instrumentos de la plaza en edición. */
+  private loadHistorial(proyeccionId: number): void {
+    this.loadingHistorial.set(true);
+    this.proyeccionesService.getInstrumentos(proyeccionId).subscribe({
+      next: (res: any) => {
+        const data = res.data;
+        this.historialInstrumentos.set(Array.isArray(data) ? data : []);
+        this.loadingHistorial.set(false);
+      },
+      error: (err: any) => {
+        console.error('Error cargando historial de instrumentos:', err);
+        this.historialInstrumentos.set([]);
+        this.loadingHistorial.set(false);
+      },
+    });
+  }
+
+  /** Abre el diálogo para agregar un año nuevo al historial. */
+  agregarAnio(): void {
+    this.editandoInstrumento.set(null);
+    this.dialogInstrumentoOpen.set(true);
+  }
+
+  /** Abre el diálogo para editar un instrumento del historial. */
+  editarInstrumento(inst: ProyeccionInstrumento): void {
+    this.editandoInstrumento.set(inst);
+    this.dialogInstrumentoOpen.set(true);
+  }
+
+  cerrarDialogoInstrumento(): void {
+    this.dialogInstrumentoOpen.set(false);
+    this.editandoInstrumento.set(null);
+  }
+
+  /** Tras guardar un instrumento: recargar historial y el listado. */
+  onInstrumentoSaved(): void {
+    const id = this.editingId();
+    if (id) {
+      this.loadHistorial(id);
+    }
+    if (this.crudTable) {
+      this.crudTable.reloadData();
     }
   }
 

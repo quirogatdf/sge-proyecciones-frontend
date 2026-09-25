@@ -47,7 +47,7 @@ import {
         @if (authService.isAdmin()) {
           <button class="btn btn-primary" (click)="openModal()">
             <svg lucidePlus [size]="18"></svg>
-            Nuevo
+            {{ config.createButtonLabel || 'Nuevo' }}
           </button>
         }
       </header>
@@ -171,7 +171,7 @@ import {
       <div class="modal-overlay" (click)="closeModal()">
         <div class="modal" (click)="$event.stopPropagation()">
           <header class="modal-header">
-            <h2>{{ editingItem() ? 'Editar' : 'Nuevo' }} {{ getEntityName() }}</h2>
+            <h2>{{ editingItem() ? getEditTitle() : getCreateTitle() }}</h2>
             <button class="btn-icon" (click)="closeModal()">
               <svg lucideX [size]="20"></svg>
             </button>
@@ -182,7 +182,7 @@ import {
           <footer class="modal-footer">
             <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
             <button class="btn btn-primary" (click)="onSaveClick()" [disabled]="saving()">
-              {{ saving() ? 'Guardando...' : 'Guardar' }}
+              {{ saving() ? 'Guardando...' : saveLabel }}
             </button>
           </footer>
         </div>
@@ -467,6 +467,8 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   @Input({ required: true }) config!: CrudTableConfig<T>;
   @Input({ required: true }) service!: any;
   @Input() saving = signal(false);
+  /** Texto del botón de guardar del footer (default: 'Guardar'). */
+  @Input() saveLabel = 'Guardar';
   @Output() modalOpened = new EventEmitter<T | null>();
   @Output() save = new EventEmitter<T | null>();
   @Output() viewDetail = new EventEmitter<number>();
@@ -763,5 +765,15 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
     if (title.includes('nivel')) return 'Nivel';
     if (title.includes('turno')) return 'Turno';
     return 'Registro';
+  }
+
+  /** Título del modal al crear (configurable; respeta el género). */
+  getCreateTitle(): string {
+    return this.config.createTitle ?? `Nuevo ${this.getEntityName()}`;
+  }
+
+  /** Título del modal al editar (configurable). */
+  getEditTitle(): string {
+    return this.config.editTitle ?? `Editar ${this.getEntityName()}`;
   }
 }

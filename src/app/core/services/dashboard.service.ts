@@ -4,7 +4,6 @@ import { HttpClient } from '@angular/common/http';
 import { ProyeccionesService } from './proyecciones.service';
 import { InstitucionesService } from './instituciones.service';
 import { CargosByYear, CargosByNivel, HorasByYear, HorasByNivel, Institucion, Instituciones, StatsByInstitucion } from '../schemas/dashboard.schema';
-import { ProyeccionResponse } from './proyecciones.service';
 import { environment } from '../../../environments/environment';
 
 // Re-export types for use in components
@@ -20,66 +19,33 @@ export class DashboardService {
   private readonly institucionesService = inject(InstitucionesService);
 
   /**
-   * Get cargos count by year for a specific institution
-   * Aggregates data from Proyeccion table client-side
-   * Note: Filters client-side since backend may not support ?institucion_id=X
+   * Get cargos count by year for a specific institution.
+   * La serie histórica se agrega en el backend (stats/por-anio) porque el
+   * listado solo expone el año en foco.
    */
   getCargosByYear(institucionId: string): Observable<{ data: CargosByYear }> {
-    return this.proyeccionesService.getAllForDashboard().pipe(
-      map((response: ProyeccionResponse) => {
-        const proyecciones = Array.isArray(response.data) 
-          ? response.data 
-          : [response.data];
-        
-        // Filter by institucion if provided, and only tipo 'C'
-        const institucionIdNum = institucionId ? parseInt(institucionId) : null;
-        
-        const filteredProyecciones = proyecciones
-          .filter(p => p.cargo?.tipo === 'C')
-          .filter(p => institucionIdNum ? p.id_institucion === institucionIdNum : true);
-        
-        // Group by year (año) and count proyecciones
-        const grouped = filteredProyecciones.reduce<Record<string, number>>((acc, p) => {
-          const year = p.año;
-          // Skip entries without a valid year
-          if (!year || year === '0' || year.trim() === '') {
-            return acc;
-          }
-          // Count 1 per proyeccion
-          acc[year] = (acc[year] || 0) + 1;
-          return acc;
-        }, {});
-        
-        // Convert to chart format, sorted by year
-        const data: CargosByYear = Object.entries(grouped)
-          .map(([year, count]) => ({
-            year: parseInt(year),
-            count,
-          }))
-          .filter(item => !isNaN(item.year) && item.year > 0)
-          .sort((a, b) => a.year - b.year);
-        
-        return { data };
-      })
+    return this.getStatsPorAnio(institucionId).pipe(
+      map((res) => ({
+        data: (res.data?.cargos ?? []) as CargosByYear,
+      })),
     );
   }
 
   /**
-   * Get cargos count by nivel (solo tipo 'C'), optionally filtered by year
-   * Aggregates data from Proyeccion table client-side
+   * Get cargos count by nivel (solo tipo 'C'), filtered by year.
+   * Pide el listado del año pedido al backend (que filtra el JOIN por anio)
+   * y agrupa por nivel.
    */
   getCargosByNivel(anio: string = ''): Observable<{ data: CargosByNivel }> {
-    return this.proyeccionesService.getAllForDashboard().pipe(
-      map((response: ProyeccionResponse) => {
-        const proyecciones = Array.isArray(response.data) 
-          ? response.data 
+    return this.proyeccionesService.getAll({ per_page: 9999, anio: anio || undefined }).pipe(
+      map((response) => {
+        const proyecciones = Array.isArray(response.data)
+          ? response.data
           : [response.data];
-        
-        // Filter only tipo 'C' and optionally by year
-        const filteredProyecciones = proyecciones
-          .filter(p => p.cargo?.tipo === 'C')
-          .filter(p => anio ? p.año === anio : true);
-        
+
+        // Filter only tipo 'C' (el cargo viene cargado en el instrumento en foco)
+        const filteredProyecciones = proyecciones.filter((p) => p.cargo?.tipo === 'C');
+
         // Group by nivel.nombre and count proyecciones
         const grouped = filteredProyecciones.reduce<Record<string, number>>((acc, p) => {
           const nivelName = p.nivel?.nombre || 'Sin nivel';
@@ -87,7 +53,7 @@ export class DashboardService {
           acc[nivelName] = (acc[nivelName] || 0) + 1;
           return acc;
         }, {});
-        
+
         // Convert to chart format
         const data: CargosByNivel = Object.entries(grouped)
           .map(([nivel_nombre, count]) => ({
@@ -95,72 +61,38 @@ export class DashboardService {
             count,
           }))
           .sort((a, b) => b.count - a.count); // Sort by count descending
-        
+
         return { data };
       })
     );
   }
 
   /**
-   * Get total horas by year (solo tipo 'H'), optionally filtered by institution
-   * Aggregates data from Proyeccion table client-side
+   * Get total horas by year (solo tipo 'H'), optionally filtered by institution.
+   * La serie histórica se agrega en el backend (stats/por-anio).
    */
   getHorasByYear(institucionId: string): Observable<{ data: HorasByYear }> {
-    return this.proyeccionesService.getAllForDashboard().pipe(
-      map((response: ProyeccionResponse) => {
-        const proyecciones = Array.isArray(response.data) 
-          ? response.data 
-          : [response.data];
-        
-        // Filter by institucion if provided, and only tipo 'H'
-        const institucionIdNum = institucionId ? parseInt(institucionId) : null;
-        
-        const filteredProyecciones = proyecciones
-          .filter(p => p.cargo?.tipo === 'H')
-          .filter(p => institucionIdNum ? p.id_institucion === institucionIdNum : true);
-        
-        // Group by year (año) and sum horar
-        const grouped = filteredProyecciones.reduce<Record<string, number>>((acc, p) => {
-          const year = p.año;
-          // Skip entries without a valid year
-          if (!year || year === '0' || year.trim() === '') {
-            return acc;
-          }
-          // Sum horar (default to 0 if null/undefined)
-          acc[year] = (acc[year] || 0) + (p.horar ?? 0);
-          return acc;
-        }, {});
-        
-        // Convert to chart format, sorted by year
-        const data: HorasByYear = Object.entries(grouped)
-          .map(([year, totalHoras]) => ({
-            year: parseInt(year),
-            totalHoras,
-          }))
-          .filter(item => !isNaN(item.year) && item.year > 0)
-          .sort((a, b) => a.year - b.year);
-        
-        return { data };
-      })
+    return this.getStatsPorAnio(institucionId).pipe(
+      map((res) => ({
+        data: (res.data?.horas ?? []) as HorasByYear,
+      })),
     );
   }
 
   /**
-   * Get total horas by nivel (solo tipo 'H'), optionally filtered by year
-   * Aggregates data from Proyeccion table client-side
+   * Get total horas by nivel (solo tipo 'H'), filtered by year.
+   * Pide el listado del año pedido al backend y agrupa por nivel.
    */
   getHorasByNivel(anio: string = ''): Observable<{ data: HorasByNivel }> {
-    return this.proyeccionesService.getAllForDashboard().pipe(
-      map((response: ProyeccionResponse) => {
-        const proyecciones = Array.isArray(response.data) 
-          ? response.data 
+    return this.proyeccionesService.getAll({ per_page: 9999, anio: anio || undefined }).pipe(
+      map((response) => {
+        const proyecciones = Array.isArray(response.data)
+          ? response.data
           : [response.data];
-        
-        // Filter only tipo 'H' and optionally by year
-        const filteredProyecciones = proyecciones
-          .filter(p => p.cargo?.tipo === 'H')
-          .filter(p => anio ? p.año === anio : true);
-        
+
+        // Filter only tipo 'H'
+        const filteredProyecciones = proyecciones.filter((p) => p.cargo?.tipo === 'H');
+
         // Group by nivel.nombre and sum horar
         const grouped = filteredProyecciones.reduce<Record<string, number>>((acc, p) => {
           const nivelName = p.nivel?.nombre || 'Sin nivel';
@@ -168,7 +100,7 @@ export class DashboardService {
           acc[nivelName] = (acc[nivelName] || 0) + (p.horar ?? 0);
           return acc;
         }, {});
-        
+
         // Convert to chart format
         const data: HorasByNivel = Object.entries(grouped)
           .map(([nivel_nombre, totalHoras]) => ({
@@ -176,9 +108,22 @@ export class DashboardService {
             totalHoras,
           }))
           .sort((a, b) => b.totalHoras - a.totalHoras); // Sort by totalHoras descending
-        
+
         return { data };
       })
+    );
+  }
+
+  /**
+   * Serie histórica cargos/horas por año, agregada por el backend.
+   */
+  private getStatsPorAnio(institucionId: string): Observable<{ data?: { cargos?: CargosByYear; horas?: HorasByYear } }> {
+    const params = new URLSearchParams();
+    if (institucionId) params.set('institucion_id', institucionId);
+    const qs = params.toString();
+
+    return this.http.get<{ data?: { cargos?: CargosByYear; horas?: HorasByYear } }>(
+      `${this.baseUrl}/proyecciones/stats/por-anio${qs ? '?' + qs : ''}`
     );
   }
 

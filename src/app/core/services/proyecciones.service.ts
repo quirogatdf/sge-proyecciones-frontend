@@ -1,14 +1,20 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Proyeccion } from '../../shared/models/proyeccion';
+import { Proyeccion, PayloadProyeccionConInstrumento, PayloadProyeccionPlaza } from '../../shared/models/proyeccion';
+import { ProyeccionInstrumento, PayloadProyeccionInstrumento } from '../../shared/models/proyeccion-instrumento';
 import { environment } from '../../../environments/environment';
 
-// Re-exportar el tipo para que las páginas puedan importarlo
-export type { Proyeccion };
+// Re-exportar los tipos para que las páginas puedan importarlos
+export type { Proyeccion, ProyeccionInstrumento, PayloadProyeccionConInstrumento, PayloadProyeccionPlaza };
 
 export interface ProyeccionResponse {
   data: Proyeccion | Proyeccion[];
+  message?: string;
+}
+
+export interface ProyeccionInstrumentoResponse {
+  data: ProyeccionInstrumento | ProyeccionInstrumento[];
   message?: string;
 }
 
@@ -19,6 +25,10 @@ export interface PaginatedProyeccionResponse {
     last_page: number;
     per_page: number;
     total: number;
+    /** Año en foco del listado (default: último año con instrumentos). */
+    anio: string;
+    /** Años disponibles en todo el historial, ordenados descendente. */
+    anios_disponibles: string[];
   };
 }
 
@@ -76,11 +86,11 @@ export class ProyeccionesService {
     return this.http.get<ProyeccionResponse>(`${this.getApiUrl('proyecciones')}/${id}`);
   }
 
-  create(proyeccion: Partial<Proyeccion>): Observable<ProyeccionResponse> {
+  create(proyeccion: PayloadProyeccionConInstrumento): Observable<ProyeccionResponse> {
     return this.http.post<ProyeccionResponse>(this.getApiUrl('proyecciones'), proyeccion);
   }
 
-  update(id: number, proyeccion: Partial<Proyeccion>): Observable<ProyeccionResponse> {
+  update(id: number, proyeccion: PayloadProyeccionPlaza): Observable<ProyeccionResponse> {
     return this.http.put<ProyeccionResponse>(`${this.getApiUrl('proyecciones')}/${id}`, proyeccion);
   }
 
@@ -89,31 +99,48 @@ export class ProyeccionesService {
   }
 
   /**
+   * Historial de instrumentos de una proyección (snapshot por año).
+   */
+  getInstrumentos(proyeccionId: number): Observable<ProyeccionInstrumentoResponse> {
+    return this.http.get<ProyeccionInstrumentoResponse>(
+      `${this.getApiUrl('proyecciones')}/${proyeccionId}/instrumentos`
+    );
+  }
+
+  /**
+   * Agregar un instrumento (año nuevo) a una proyección.
+   */
+  createInstrumento(
+    proyeccionId: number,
+    payload: PayloadProyeccionInstrumento
+  ): Observable<ProyeccionInstrumentoResponse> {
+    return this.http.post<ProyeccionInstrumentoResponse>(
+      `${this.getApiUrl('proyecciones')}/${proyeccionId}/instrumentos`,
+      payload
+    );
+  }
+
+  /**
+   * Editar un instrumento del historial (un año concreto de la proyección).
+   * El backend valida que el instrumento pertenezca a la proyección.
+   */
+  updateInstrumento(
+    proyeccionId: number,
+    instrumentoId: number,
+    payload: PayloadProyeccionInstrumento
+  ): Observable<ProyeccionInstrumentoResponse> {
+    return this.http.put<ProyeccionInstrumentoResponse>(
+      `${this.getApiUrl('proyecciones')}/${proyeccionId}/instrumentos/${instrumentoId}`,
+      payload
+    );
+  }
+
+  /**
    * Get proyecciones filtered by institucion ID
    */
   getByInstitucion(institucionId: string | number): Observable<ProyeccionResponse> {
     return this.http.get<ProyeccionResponse>(
       `${this.getApiUrl('proyecciones')}?institucion_id=${institucionId}`
-    );
-  }
-
-  /**
-   * Get all proyecciones without pagination (for dashboard aggregation)
-   * This loads ALL records - use only for dashboard charts that need full data
-   */
-  getAllForDashboard(): Observable<ProyeccionResponse> {
-    return this.http.get<ProyeccionResponse>(
-      this.getApiUrl('proyecciones?per_page=9999')
-    );
-  }
-
-  /**
-   * Get all proyecciones with nivel relationship eager loaded
-   * Used for dashboard chart: cargos by nivel
-   */
-  getAllWithNivel(): Observable<ProyeccionResponse> {
-    return this.http.get<ProyeccionResponse>(
-      `${this.getApiUrl('proyecciones')}?include=nivel`
     );
   }
 

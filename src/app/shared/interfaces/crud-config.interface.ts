@@ -84,4 +84,10 @@ export interface CrudTableConfig<T = Record<string, unknown>> {
   showViewDetail?: boolean;
   /** Usar paginación y búsqueda server-side (default: false) */
   serverSide?: boolean;
+  /** Texto del botón para crear (default: 'Nuevo'). Ej: 'Nueva Proyección'. */
+  createButtonLabel?: string;
+  /** Título del modal para crear (default: 'Nuevo {entity}'). Ej: 'Nueva Proyección'. */
+  createTitle?: string;
+  /** Título del modal para editar (default: 'Editar {entity}'). Ej: 'Editar Proyección'. */
+  editTitle?: string;
 }
