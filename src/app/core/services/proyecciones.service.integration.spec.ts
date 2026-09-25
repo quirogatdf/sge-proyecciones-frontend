@@ -97,4 +97,14 @@ describe('ProyeccionesService — instrumentos (Realist Mocks)', () => {
     expect(error.status).toBe(422);
     expect(error.error.errors.anio).toContain('Ya existe.');
   });
+
+  it('should delete instrumento for a proyeccion', async () => {
+    const promise = firstValueFrom(service.deleteInstrumento(7, 42));
+
+    const req = httpMock.expectOne('http://localhost:8000/api/proyecciones/7/instrumentos/42');
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null, { status: 204, statusText: 'No Content' });
+
+    await promise;
+  });
 });

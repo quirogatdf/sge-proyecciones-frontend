@@ -136,6 +136,19 @@ export class ProyeccionesService {
   }
 
   /**
+   * Eliminar un instrumento del historial.
+   * El backend rechaza con 409 si es el último de la proyección.
+   */
+  deleteInstrumento(
+    proyeccionId: number,
+    instrumentoId: number
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.getApiUrl('proyecciones')}/${proyeccionId}/instrumentos/${instrumentoId}`
+    );
+  }
+
+  /**
    * Get proyecciones filtered by institucion ID
    */
   getByInstitucion(institucionId: string | number): Observable<ProyeccionResponse> {

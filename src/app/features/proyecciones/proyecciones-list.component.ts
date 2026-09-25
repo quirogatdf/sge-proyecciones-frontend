@@ -563,7 +563,7 @@ interface SelectOption {
                         <td>{{ inst.horar ?? '-' }}</td>
                         <td>{{ inst.cargos ?? '-' }}</td>
                         <td>{{ inst.estado || '-' }}</td>
-                        <td>
+                        <td class="actions-cell">
                           <button
                             type="button"
                             class="btn-edit"
@@ -571,6 +571,15 @@ interface SelectOption {
                             title="Editar instrumento del año {{ inst.anio }}"
                           >
                             ✎ Editar
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-delete"
+                            (click)="eliminarInstrumento(inst)"
+                            [disabled]="historialInstrumentos().length <= 1"
+                            [title]="historialInstrumentos().length <= 1 ? 'No se puede eliminar el único instrumento de la proyección' : 'Eliminar instrumento del año ' + inst.anio"
+                          >
+                            🗑 Eliminar
                           </button>
                         </td>
                       </tr>
@@ -964,6 +973,40 @@ interface SelectOption {
         border-color: var(--primary);
         color: var(--primary);
         background: color-mix(in oklch, var(--primary) 8%, transparent);
+      }
+
+      .actions-cell {
+        display: flex;
+        gap: 0.35rem;
+        align-items: center;
+        white-space: nowrap;
+      }
+
+      .btn-delete {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--foreground);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.2rem 0.5rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+      }
+
+      .btn-delete:hover:not(:disabled) {
+        border-color: #dc2626;
+        color: #dc2626;
+        background: color-mix(in oklch, #dc2626 8%, transparent);
+      }
+
+      .btn-delete:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
       }
     `,
   ],
@@ -1554,6 +1597,42 @@ export class ProyeccionesListComponent implements OnInit {
   editarInstrumento(inst: ProyeccionInstrumento): void {
     this.editandoInstrumento.set(inst);
     this.dialogInstrumentoOpen.set(true);
+  }
+
+  /** Elimina un instrumento del historial (con confirmación). */
+  eliminarInstrumento(inst: ProyeccionInstrumento): void {
+    const proyeccionId = this.editingId();
+    if (!proyeccionId) {
+      return;
+    }
+
+    this.alertService
+      .confirm(
+        `¿Eliminar el instrumento del año ${inst.anio}?`,
+        'Se borra el snapshot de ese año del historial. Esta acción no se puede deshacer.',
+        'Sí, eliminar',
+        'Cancelar'
+      )
+      .then((result) => {
+        if (!result.isConfirmed) {
+          return;
+        }
+
+        this.proyeccionesService.deleteInstrumento(proyeccionId, inst.id).subscribe({
+          next: () => {
+            this.alertService.success('Instrumento eliminado', `Se eliminó el año ${inst.anio}.`);
+            this.loadHistorial(proyeccionId);
+            this.crudTable?.reloadData();
+          },
+          error: (err: any) => {
+            console.error('Error eliminando instrumento:', err);
+            this.alertService.error(
+              'No se pudo eliminar',
+              err?.error?.message ?? 'Ocurrió un error al intentar eliminar el instrumento.'
+            );
+          },
+        });
+      });
   }
 
   cerrarDialogoInstrumento(): void {
