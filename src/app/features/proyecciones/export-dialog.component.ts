@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProyeccionesService } from '../../core/services/proyecciones.service';
 import { Cargo } from '../../core/services/cargos.service';
 import { AlertService } from '../../core/services/alert.service';
-import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select';
 
 export interface ExportFilters {
   motivo: 'Continuidad' | 'Creacion' | null;

@@ -16,10 +16,10 @@ import { InstitucionesService } from '../../core/services/instituciones.service'
 import { ResolucionesService } from '../../core/services/resoluciones.service';
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
-import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select';
 import { ExportDialogComponent } from './export-dialog.component';
 import { AgregarInstrumentoDialogComponent } from './agregar-instrumento-dialog.component';
-import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
+import { ColumnConfig, CrudTableConfig, SearchFieldOption } from '../../shared/interfaces/crud-config.interface';
 import { Observable } from 'rxjs';
 
 // Servicio wrapper que transforma los datos para agregar campos de localidad y nombre de institución
@@ -156,6 +156,7 @@ interface SelectOption {
         #crudTable
         [config]="tableConfig"
         [service]="proyeccionesServiceWrapper"
+        [searchFieldOptions]="camposBuscables()"
         [saving]="saving"
         [saveLabel]="saveLabel()"
         (modalOpened)="onModalOpened($event)"
@@ -1149,6 +1150,19 @@ export class ProyeccionesListComponent implements OnInit {
   submitted = signal(false);
   formErrors = signal<Record<string, string[]>>({});
 
+  /**
+   * Opciones del picker "Buscar en".
+   *
+   * Se pide UNA vez y se pasa por `[searchFieldOptions]` al CrudTable: sin
+   * opciones, el picker no se renderiza y la búsqueda sigue siendo la de siempre
+   * (comportamiento heredado). Un fallo acá no debe romper la tabla, así que
+   * degrada en silencio.
+   *
+   * Va por input y no dentro de `tableConfig` a propósito: llega por HTTP después
+   * del mount, y un objeto de config plano lo capturaría por valor.
+   */
+  camposBuscables = signal<SearchFieldOption[]>([]);
+
   formData: any = {
     estado: '',
     motivo: '',
@@ -1273,6 +1287,26 @@ export class ProyeccionesListComponent implements OnInit {
     this.loadTurnos();
     this.loadInstituciones();
     this.loadResoluciones();
+    this.loadCamposBuscables();
+  }
+
+  /**
+   * Campos buscables del listado.
+   *
+   * Se piden UNA vez y se pasan por `[searchFieldOptions]` al CrudTable: sin
+   * opciones, el picker no se renderiza y la búsqueda sigue siendo la de siempre.
+   * Un fallo acá no debe romper la tabla, así que degrada en silencio.
+   */
+  private loadCamposBuscables() {
+    this.proyeccionesService.getCamposBuscables().subscribe({
+      next: (res) => {
+        this.camposBuscables.set(res?.data ?? []);
+      },
+      error: (err) => {
+        console.error('Error cargando campos buscables:', err);
+        this.camposBuscables.set([]);
+      },
+    });
   }
 
   private loadNiveles() {

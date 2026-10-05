@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Proyeccion, PayloadProyeccionConInstrumento, PayloadProyeccionPlaza } from '../../shared/models/proyeccion';
 import { ProyeccionInstrumento, PayloadProyeccionInstrumento } from '../../shared/models/proyeccion-instrumento';
 import { environment } from '../../../environments/environment';
+import type { SearchFieldOption } from '../../shared/interfaces/crud-config.interface';
 
 // Re-exportar los tipos para que las páginas puedan importarlos
 export type { Proyeccion, ProyeccionInstrumento, PayloadProyeccionConInstrumento, PayloadProyeccionPlaza };
@@ -36,9 +37,19 @@ export interface ProyeccionQueryParams {
   page?: number;
   per_page?: number;
   search?: string;
+  /**
+   * Clave pública del campo por el que se busca. La resuelve el registro del
+   * backend; el frontend nunca manda un nombre de columna. Ausente ≡ `__all__`.
+   */
+  search_field?: string;
   id_nivel?: number | null;
   id_resolucion?: number | null;
   localidad?: string | null;
+}
+
+/** Payload de `GET /api/proyecciones/campos-buscables`. */
+export interface CamposBuscablesResponse {
+  data: SearchFieldOption[];
 }
 
 @Injectable({
@@ -61,12 +72,15 @@ export class ProyeccionesService {
     if (params?.page) httpParams = httpParams.set('page', params.page.toString());
     if (params?.per_page) httpParams = httpParams.set('per_page', params.per_page.toString());
     if (params?.search) httpParams = httpParams.set('search', params.search as string);
+    // Explícito y no vía el catch-all de abajo: el campo de búsqueda es parte del
+    // contrato de búsqueda, no un filtro cualquiera.
+    if (params?.search_field) httpParams = httpParams.set('search_field', params.search_field);
     if (params?.id_nivel) httpParams = httpParams.set('id_nivel', (params.id_nivel as number).toString());
     if (params?.['sort_by']) httpParams = httpParams.set('sort_by', params['sort_by'] as string);
     if (params?.['sort_dir']) httpParams = httpParams.set('sort_dir', params['sort_dir'] as string);
     // Forward any additional filter params (e.g. id_resolucion)
     for (const [key, value] of Object.entries(params ?? {})) {
-      if (['page','per_page','search','id_nivel','sort_by','sort_dir'].includes(key)) continue;
+      if (['page','per_page','search','search_field','id_nivel','sort_by','sort_dir'].includes(key)) continue;
       if (value !== null && value !== undefined && value !== '') {
         httpParams = httpParams.set(key, String(value));
       }
@@ -80,6 +94,19 @@ export class ProyeccionesService {
 
   setNivelFiltro(nivelId: number | null): void {
     this.selectedNivelId.set(nivelId);
+  }
+
+  /**
+   * Campos por los que se puede buscar en el listado.
+   *
+   * Alimenta el picker "Buscar en" del CrudTable. La lista NO se hardcodea en el
+   * frontend: el registro del backend es la única fuente de verdad, así que agregar
+   * un campo buscable es un cambio de un solo lugar.
+   *
+   * La primera opción es el sentinel `__all__` (comportamiento heredado).
+   */
+  getCamposBuscables(): Observable<CamposBuscablesResponse> {
+    return this.http.get<CamposBuscablesResponse>(this.getApiUrl('proyecciones/campos-buscables'));
   }
 
   getById(id: number): Observable<ProyeccionResponse> {

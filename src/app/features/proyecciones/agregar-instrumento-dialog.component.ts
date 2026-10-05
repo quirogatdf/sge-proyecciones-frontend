@@ -9,7 +9,7 @@ import { CargosService, Cargo } from '../../core/services/cargos.service';
 import { FuncionesService } from '../../core/services/funciones.service';
 import { TurnosService } from '../../core/services/turnos.service';
 import { ResolucionesService } from '../../core/services/resoluciones.service';
-import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select';
 
 type ModoAgregar = 'copiar_anterior' | 'historial' | 'nuevo';
 

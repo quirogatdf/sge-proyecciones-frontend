@@ -1,9 +1,11 @@
 import {
   Component,
   inject,
+  input,
   signal,
   computed,
   OnInit,
+  OnDestroy,
   ChangeDetectionStrategy,
   Input,
   Output,
@@ -12,9 +14,10 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ColumnConfig, CrudTableConfig, ServerSideCrudService } from '../../interfaces/crud-config.interface';
+import { ColumnConfig, CrudTableConfig, SearchFieldOption, ServerSideCrudService } from '../../interfaces/crud-config.interface';
 import { AlertService } from '../../../core/services/alert.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { SearchableSelectComponent } from '../searchable-select/searchable-select';
 import {
   LucidePlus,
   LucidePencil,
@@ -32,6 +35,7 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    SearchableSelectComponent,
     LucidePlus,
     LucidePencil,
     LucideTrash2,
@@ -53,8 +57,19 @@ import {
       </header>
 
       <div class="table-container">
-        <!-- Buscador -->
+        <!-- Buscador: el picker "Buscar en" va a la izquierda del input. El orden
+             en el template ya lo define; el CSS solo le da layout de fila. -->
         <div class="search-box">
+          @if (hasSearchFieldPicker()) {
+            <app-searchable-select
+              id="searchFieldPicker"
+              class="search-field-picker"
+              [options]="searchFieldSelectOptions()"
+              placeholder="Buscar en…"
+              [value]="effectiveSearchField()"
+              (valueChanged)="onSearchFieldChange($event)"
+            />
+          }
           <input
             type="text"
             [placeholder]="config.searchPlaceholder || 'Buscar...'"
@@ -391,10 +406,22 @@ import {
       .search-box {
         padding: 1rem;
         border-block-end: 1px solid var(--border);
+        /* Picker + input en la MISMA fila: el host de app-searchable-select es
+           block, asi que sin flex se come el ancho completo y lo manda abajo. */
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .search-box .search-field-picker {
+        flex: 0 0 auto;
+        width: 16rem;
       }
 
       .search-input {
-        width: 100%;
+        /* flex, no width:100% — con el picker al lado el 100% lo desbordaria. */
+        flex: 1 1 auto;
+        min-width: 0;
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
@@ -459,13 +486,26 @@ import {
     `,
   ],
 })
-export class CrudTableComponent<T extends { id: number }> implements OnInit {
+export class CrudTableComponent<T extends { id: number }> implements OnInit, OnDestroy {
   private readonly alertService = inject(AlertService);
   private readonly sanitizer = inject(DomSanitizer);
   readonly authService = inject(AuthService);
 
   @Input({ required: true }) config!: CrudTableConfig<T>;
   @Input({ required: true }) service!: any;
+
+  /**
+   * Opciones del picker "Buscar en".
+   *
+   * Signal input y NO parte de `config`, a proposito: las opciones llegan por HTTP
+   * DESPUES de que el componente ya esta montado. Si vivieran en `config`, el
+   * objeto se construiria capturando el array por VALOR (`[]` en ese momento) y
+   * ademas los computeds del componente leen propiedades planas, asi que nunca se
+   * recalcularian al llegar los datos. Ese combo es exactamente por lo que el
+   * dropdown no aparecia.
+   */
+  readonly searchFieldOptions = input<SearchFieldOption[]>([]);
+
   @Input() saving = signal(false);
   /** Texto del botón de guardar del footer (default: 'Guardar'). */
   @Input() saveLabel = 'Guardar';
@@ -482,6 +522,9 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   editingItem = signal<T | null>(null);
 
   searchTerm = signal('');
+  /** Campo de busqueda elegido por el usuario (null = usar el default). */
+  readonly searchField = signal<string | null>(null);
+  private searchDebounceHandle: ReturnType<typeof setTimeout> | null = null;
   currentPage = signal(1);
   sortBy = signal<keyof T | null>(null);
   sortDirection = signal<'asc' | 'desc'>('asc');
@@ -492,6 +535,31 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   serverLoading = signal(false);
 
   pageSize = computed(() => this.config.pageSize || 25);
+
+  /**
+   * Opciones del picker, en el formato que espera `SearchableSelectComponent`.
+   *
+   * El componente NO conoce el string `__all__`: el default es "la primera
+   * opcion", y el backend ya pone el sentinel primero. Asi la decision no se
+   * duplica en el frontend.
+   */
+  readonly searchFieldSelectOptions = computed<{ id: string; label: string }[]>(() =>
+    this.searchFieldOptions().map((o) => ({ id: o.key, label: o.label })),
+  );
+
+  /** Hay picker de campo disponible? Si no, la busqueda sigue igual. */
+  readonly hasSearchFieldPicker = computed(() => this.searchFieldOptions().length > 0);
+
+  /**
+   * Campo que se manda al backend.
+   *
+   * `searchField()` es el override explicito del usuario; si todavia no eligio
+   * nada, cae a la PRIMERA opcion. Se resuelve con un `computed` en vez de un
+   * setter en `ngOnInit` porque las opciones llegan despues del mount: si se
+   * calculara "una vez", quedaria clavado en `null` para siempre y el backend
+   * nunca recibiria `search_field`.
+   */
+  readonly effectiveSearchField = computed(() => this.searchField() ?? this.searchFieldOptions()[0]?.key ?? null);
 
   // Client-side filtered items
   filteredItems = computed(() => {
@@ -586,7 +654,16 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
   });
 
   ngOnInit() {
+    // El default del campo NO se setea aca: se resuelve en `effectiveSearchField`
+    // para que tambien funcione si las opciones llegan despues del mount.
     this.loadItems();
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchDebounceHandle !== null) {
+      clearTimeout(this.searchDebounceHandle);
+      this.searchDebounceHandle = null;
+    }
   }
 
   loadItems() {
@@ -609,9 +686,6 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
       page: this.currentPage(),
       per_page: this.pageSize(),
     };
-    
-    const search = this.searchTerm();
-    if (search) params['search'] = search;
 
     const sortBy = this.sortBy();
     const sortDir = this.sortDirection();
@@ -619,10 +693,20 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
       params['sort_by'] = sortBy as string;
       params['sort_dir'] = sortDir;
     }
-    
+
     // Add any extra params from the service wrapper
     const extraParams = this.service?.getExtraParams?.();
     if (extraParams) Object.assign(params, extraParams);
+
+    // `search` y el campo se escriben DESPUES del Object.assign de extras: son
+    // estado de UI (la caja de texto y el picker), ellos tienen la ultima palabra.
+    const search = this.searchTerm();
+    if (search) params['search'] = search;
+
+    const field = this.effectiveSearchField();
+    if (this.hasSearchFieldPicker() && field) {
+      params[this.config.searchFieldParamName ?? 'search_field'] = field;
+    }
 
     (this.service as ServerSideCrudService<T>).getAll(params).subscribe({
       next: (res: any) => {
@@ -639,12 +723,55 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit {
     });
   }
 
+  /**
+   * Recarga el listado desde la primera pagina.
+   *
+   * El reset es parte del contrato: en la pagina 5, cambiar anio/nivel pedia la
+   * pagina 5 del conjunto nuevo -> tabla vacia. `deleteItem()` NO usa este metodo
+   * a proposito: despues de borrar conviene quedarse en la pagina actual.
+   */
   reloadData() {
+    this.currentPage.set(1);
     this.loadItems();
   }
 
+  /**
+   * Debounce imperativo con `setTimeout`, no `effect()`.
+   *
+   * La app es zoneless (`provideZonelessChangeDetection()`) y el propio codebase
+   * lo deja escrito en agregar-instrumento-dialog.component.ts: un `effect()` no
+   * garantiza el re-render, por eso los handlers se disparan desde el template.
+   * `SearchableSelectComponent` usa exactamente este patron.
+   */
   onSearch(term: string) {
+    if (this.searchDebounceHandle !== null) {
+      clearTimeout(this.searchDebounceHandle);
+      this.searchDebounceHandle = null;
+    }
+
+    const ms = this.config.searchDebounceMs ?? 350;
+    if (ms <= 0) {
+      this.aplicarBusqueda(term);
+      return;
+    }
+
+    this.searchDebounceHandle = setTimeout(() => {
+      this.searchDebounceHandle = null;
+      this.aplicarBusqueda(term);
+    }, ms);
+  }
+
+  private aplicarBusqueda(term: string) {
     this.searchTerm.set(term);
+    this.currentPage.set(1);
+    if (this.config.serverSide) {
+      this.loadServerSide();
+    }
+  }
+
+  /** El picker es un filtro, no un campo: cambiarlo no re-tipea el termino. */
+  onSearchFieldChange(value: number | string | null) {
+    this.searchField.set(value === null ? null : String(value));
     this.currentPage.set(1);
     if (this.config.serverSide) {
       this.loadServerSide();

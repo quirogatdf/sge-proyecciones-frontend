@@ -14,7 +14,7 @@ import { InstitucionesService, Institucion } from '../../core/services/instituci
 import { NivelesService, Nivel } from '../../core/services/niveles.service';
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
-import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select';
 import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
 import { InstitucionFormSchema, type InstitucionFormInput } from '../../schemas/institucion.schema';
 

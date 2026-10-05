@@ -22,7 +22,7 @@ import { CargosByNivelChartComponent } from './components/cargos-by-nivel-chart.
 import { HorasByYearChartComponent } from './components/horas-by-year-chart.component';
 import { HorasByNivelChartComponent } from './components/horas-by-nivel-chart.component';
 import { ProyeccionesByInstitucionChartComponent } from './components/proyecciones-by-institucion-chart.component';
-import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select';
 
 @Component({
   selector: 'app-dashboard-page',

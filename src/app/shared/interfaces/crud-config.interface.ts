@@ -67,6 +67,18 @@ export interface ServerSideCrudService<T> {
 }
 
 /**
+ * Opción del selector "Buscar en". El origen y el tipo son informativos: los
+ * envía el endpoint de descubrimiento del backend y el frontend no los usa.
+ */
+export interface SearchFieldOption {
+  /** Clave pública del campo. El frontend nunca envía nombres de columna. */
+  key: string;
+  label: string;
+  origen?: 'plaza' | 'instrumento' | 'relacion' | null;
+  tipo?: 'texto' | 'numero' | 'fecha' | 'enum' | null;
+}
+
+/**
  * Configuración completa para el componente CRUD
  */
 export interface CrudTableConfig<T = Record<string, unknown>> {
@@ -90,4 +102,14 @@ export interface CrudTableConfig<T = Record<string, unknown>> {
   createTitle?: string;
   /** Título del modal para editar (default: 'Editar {entity}'). Ej: 'Editar Proyección'. */
   editTitle?: string;
+  /**
+   * Nombre del query param del campo de búsqueda (default: 'search_field').
+   *
+   * Las OPCIONES del selector no van acá: se pasan como input `searchFieldOptions`
+   * del CrudTable, porque llegan por HTTP después del mount y un objeto de config
+   * plano las capturaría por valor, dejando el picker en `[]`.
+   */
+  searchFieldParamName?: string;
+  /** Debounce del input de búsqueda en ms (default: 350, 0 = sin debounce). */
+  searchDebounceMs?: number;
 }
