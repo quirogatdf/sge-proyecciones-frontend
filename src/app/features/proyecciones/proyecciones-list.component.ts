@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect, ViewChild, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -121,6 +121,7 @@ interface SelectOption {
             [options]="nivelesOptions()"
             placeholder="Todos los niveles"
             [(value)]="selectedNivelId"
+            (valueChanged)="applyFilters()"
           />
         </div>
         <div class="filter-group">
@@ -130,6 +131,7 @@ interface SelectOption {
             [options]="resolucionesFilterOptions()"
             placeholder="Todas las resoluciones"
             [(value)]="selectedResolucionId"
+            (valueChanged)="applyFilters()"
           />
         </div>
         <div class="filter-group">
@@ -139,6 +141,7 @@ interface SelectOption {
             [options]="localidadFilterOptions()"
             placeholder="Todas las localidades"
             [(value)]="selectedLocalidad"
+            (valueChanged)="applyFilters()"
           />
         </div>
         <div class="filter-group">
@@ -148,6 +151,7 @@ interface SelectOption {
             [options]="aniosFilterOptions()"
             placeholder="Año actual"
             [(value)]="selectedAnio"
+            (valueChanged)="applyFilters()"
           />
         </div>
       </div>
@@ -1064,23 +1068,6 @@ export class ProyeccionesListComponent implements OnInit {
     return this.pasoCreacion() === 1 ? 'Siguiente' : 'Crear proyección';
   });
 
-  // Effect para filtrar automáticamente cuando cambia nivel, resolución, localidad o año
-  private filtrosEffect = effect(() => {
-    const params: Record<string, unknown> = {};
-    const nivelId = this.selectedNivelId();
-    const resolucionId = this.selectedResolucionId();
-    const localidad = this.selectedLocalidad();
-    const anio = this.selectedAnio();
-    if (nivelId) params['id_nivel'] = nivelId;
-    if (resolucionId) params['id_resolucion'] = resolucionId;
-    if (localidad) params['localidad'] = localidad;
-    if (anio) params['anio'] = anio;
-    this.proyeccionesServiceWrapper.setExtraParams(params);
-    if (this.crudTable) {
-      this.crudTable.reloadData();
-    }
-  });
-
   // Opciones estáticas para selects
   readonly estadosOptions = signal<SelectOption[]>([
     { id: 'Autorizado', label: 'Autorizado' },
@@ -1281,6 +1268,7 @@ export class ProyeccionesListComponent implements OnInit {
   };
 
   ngOnInit() {
+    this.applyFilters();
     this.loadNiveles();
     this.loadCargos();
     this.loadFunciones();
@@ -1288,6 +1276,23 @@ export class ProyeccionesListComponent implements OnInit {
     this.loadInstituciones();
     this.loadResoluciones();
     this.loadCamposBuscables();
+  }
+
+  /** Aplica los filtros activos y recarga la tabla desde la primera página. */
+  applyFilters(): void {
+    const nivelId = this.selectedNivelId();
+    const resolucionId = this.selectedResolucionId();
+    const localidad = this.selectedLocalidad();
+    const anio = this.selectedAnio();
+
+    const params: Record<string, unknown> = {};
+    if (nivelId) params['id_nivel'] = nivelId;
+    if (resolucionId) params['id_resolucion'] = resolucionId;
+    if (localidad) params['localidad'] = localidad;
+    if (anio) params['anio'] = anio;
+
+    this.proyeccionesServiceWrapper.setExtraParams(params);
+    this.crudTable?.reloadData();
   }
 
   /**
@@ -1384,14 +1389,6 @@ export class ProyeccionesListComponent implements OnInit {
       },
       error: (err: any) => console.error('Error cargando resoluciones:', err),
     });
-  }
-
-  onNivelFilterChange() {
-    const nivelId = this.selectedNivelId();
-    this.proyeccionesService.setNivelFiltro(nivelId);
-    if (this.crudTable) {
-      this.crudTable.reloadData();
-    }
   }
 
   private formatDateForInput(date: string | null | undefined): string {

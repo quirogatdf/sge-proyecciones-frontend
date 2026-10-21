@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Proyeccion, PayloadProyeccionConInstrumento, PayloadProyeccionPlaza } from '../../shared/models/proyeccion';
@@ -58,9 +58,6 @@ export interface CamposBuscablesResponse {
 export class ProyeccionesService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/api`;
-  
-  // Estado interno para el filtro de nivel
-  selectedNivelId = signal<number | null>(null);
 
   private getApiUrl(endpoint: string): string {
     return `${this.baseUrl}/${endpoint}`;
@@ -90,10 +87,6 @@ export class ProyeccionesService {
       this.getApiUrl('proyecciones'),
       { params: httpParams }
     );
-  }
-
-  setNivelFiltro(nivelId: number | null): void {
-    this.selectedNivelId.set(nivelId);
   }
 
   /**
