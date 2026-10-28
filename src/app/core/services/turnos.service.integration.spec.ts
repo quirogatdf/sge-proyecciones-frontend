@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TurnosService } from './turnos.service';
 import { TurnoSchema } from '../../schemas/turno.schema';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 describe('TurnosService Integration (Realist Mocks)', () => {
@@ -115,7 +115,7 @@ describe('TurnosService Integration (Realist Mocks)', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
 
     const result = await promise;
-    expect(result).toBeUndefined();
+    expect(result).toBeNull();
   });
 
   it('should handle HTTP error gracefully', async () => {
@@ -124,6 +124,13 @@ describe('TurnosService Integration (Realist Mocks)', () => {
     const req = httpMock.expectOne('http://localhost:8000/api/turnos');
     req.flush('Server error', { status: 500, statusText: 'Internal Server Error' });
 
-    await expectAsync(promise).toBeRejected();
+    let error: unknown;
+    try {
+      await promise;
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error).toBeInstanceOf(HttpErrorResponse);
   });
 });
