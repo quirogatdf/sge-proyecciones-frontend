@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,7 +6,7 @@ import { ResolucionesService, Resolucion } from '../../core/services/resolucione
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
 import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
-import { ResolucionFormSchema, TIPOS_RESOLUCION, type ResolucionFormInput } from '../../schemas/resolucion.schema';
+import { ResolucionFormSchema, TIPOS_RESOLUCION, type ResolucionFormInput, type TipoResolucion } from '../../schemas/resolucion.schema';
 
 @Component({
   selector: 'app-resoluciones-page',
@@ -17,15 +17,34 @@ import { ResolucionFormSchema, TIPOS_RESOLUCION, type ResolucionFormInput } from
     CrudTableComponent
   ],
   template: `
-    <app-crud-table
-      #crudTable
-      [config]="tableConfig"
-      [service]="resolucionesService"
-      [saving]="saving"
-      (modalOpened)="onModalOpened($event)"
-      (save)="onSave(crudTable)"
-      (viewDetail)="onViewDetail($event)"
-    >
+    <div class="page">
+      <div class="filters">
+        <div class="filter-group">
+          <label for="tipoFiltro">Filtrar por tipo:</label>
+          <select
+            id="tipoFiltro"
+            class="filter-select"
+            [ngModel]="tipoFilter()"
+            (ngModelChange)="onTipoFilterChange($event)"
+          >
+            <option value="">Todos los tipos</option>
+            @for (tipo of tiposResolucion; track tipo) {
+              <option [value]="tipo">{{ tipo }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <app-crud-table
+        #crudTable
+        [config]="tableConfig"
+        [service]="resolucionesService"
+        [itemFilter]="itemFilter()"
+        [saving]="saving"
+        (modalOpened)="onModalOpened($event)"
+        (save)="onSave(crudTable)"
+        (viewDetail)="onViewDetail($event)"
+      >
       <div form-content>
         <div class="form-group" [class.has-error]="hasFieldError('nombre')">
           <label for="nombre">Nombre *</label>
@@ -119,11 +138,52 @@ import { ResolucionFormSchema, TIPOS_RESOLUCION, type ResolucionFormInput } from
           }
         </div>
       </div>
-    </app-crud-table>
+      </app-crud-table>
+    </div>
   `,
   styles: [`
     :host {
       display: block;
+    }
+
+    .page {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .filters {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .filter-group label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--foreground);
+    }
+
+    .filter-select {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      background: var(--background);
+      color: var(--foreground);
+      min-width: 200px;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
     }
 
     .form-group {
@@ -190,9 +250,17 @@ export class ResolucionesPage {
   private readonly alertService = inject(AlertService);
   private readonly router = inject(Router);
 
+  @ViewChild('crudTable') private crudTable?: CrudTableComponent<Resolucion>;
+
   saving = signal(false);
   editingResolucion = signal<Resolucion | null>(null);
   readonly tiposResolucion = TIPOS_RESOLUCION;
+
+  readonly tipoFilter = signal<TipoResolucion | ''>('');
+  readonly itemFilter = computed<((item: Resolucion) => boolean) | null>(() => {
+    const tipo = this.tipoFilter();
+    return tipo === '' ? null : (item) => item.tipo === tipo;
+  });
 
   submitted = signal(false);
   formErrors = signal<Record<string, string[]>>({});
@@ -236,6 +304,11 @@ export class ResolucionesPage {
     ],
     searchFields: ['nombre', 'año', 'tipo']
   };
+
+  onTipoFilterChange(tipo: TipoResolucion | '') {
+    this.tipoFilter.set(tipo);
+    this.crudTable?.resetPage();
+  }
 
   onModalOpened(item: Resolucion | null) {
     this.submitted.set(false);

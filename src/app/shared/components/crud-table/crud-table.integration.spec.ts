@@ -334,4 +334,54 @@ describe('CrudTableComponent — búsqueda por campo', () => {
 
     expect(ultimaLlamada(servicio)['page']).toBe(1);
   });
+
+  // ─────────────────────── filtro externo (client-side) ───────────────────────
+
+  function montarClientSide(filter: ((item: Row) => boolean) | null) {
+    const servicio = crearServicioMock();
+    const fixture = TestBed.createComponent(CrudTableComponent<Row>);
+    fixture.componentInstance.config = {
+      title: 'Resoluciones',
+      columns: [{ key: 'nombre', label: 'Nombre' }],
+    };
+    fixture.componentInstance.service = servicio;
+    fixture.componentRef.setInput('itemFilter', filter);
+    fixture.detectChanges();
+
+    fixture.componentInstance.items.set([
+      { id: 1, nombre: 'Creación 2026' },
+      { id: 2, nombre: 'Continuidad 2026' },
+    ]);
+    fixture.detectChanges();
+
+    return { fixture, cmp: fixture.componentInstance };
+  }
+
+  it('aplica el predicado externo en client-side', () => {
+    const { cmp } = montarClientSide((item) => item.id === 2);
+
+    expect(cmp.filteredItems().map((item) => item.id)).toEqual([2]);
+  });
+
+  it('combina el predicado externo con la búsqueda', () => {
+    const { cmp } = montarClientSide((item) => item.id === 2);
+    cmp.searchTerm.set('continuidad');
+
+    expect(cmp.filteredItems().map((item) => item.id)).toEqual([2]);
+  });
+
+  it('sin predicado externo no filtra nada', () => {
+    const { cmp } = montarClientSide(null);
+
+    expect(cmp.filteredItems().length).toBe(2);
+  });
+
+  it('resetPage() vuelve a la página 1', () => {
+    const { cmp } = montarClientSide(null);
+    cmp.currentPage.set(3);
+
+    cmp.resetPage();
+
+    expect(cmp.currentPage()).toBe(1);
+  });
 });

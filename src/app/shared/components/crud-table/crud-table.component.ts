@@ -506,6 +506,15 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit, OnD
    */
   readonly searchFieldOptions = input<SearchFieldOption[]>([]);
 
+  /**
+   * Predicado opcional para filtrar filas en modo client-side.
+   *
+   * Se recibe como input (no dentro de `config`) para que el consumidor pueda
+   * reconstruirlo cuando cambie su propio estado de filtros y el computed de
+   * `filteredItems` se recalcule.
+   */
+  readonly itemFilter = input<((item: T) => boolean) | null>(null);
+
   @Input() saving = signal(false);
   /** Texto del botón de guardar del footer (default: 'Guardar'). */
   @Input() saveLabel = 'Guardar';
@@ -565,9 +574,10 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit, OnD
   filteredItems = computed(() => {
     // If server-side, don't do client-side filtering
     if (this.config.serverSide) return this.items();
-    
+
+    const filter = this.itemFilter();
     const search = this.searchTerm().toLowerCase();
-    const items = this.items();
+    const items = filter ? this.items().filter((item) => filter(item)) : this.items();
     if (!search) return items;
 
     // Determine which fields to search in
@@ -801,6 +811,11 @@ export class CrudTableComponent<T extends { id: number }> implements OnInit, OnD
         this.loadServerSide();
       }
     }
+  }
+
+  /** Vuelve a la primera página (útil cuando cambia un filtro externo). */
+  resetPage(): void {
+    this.currentPage.set(1);
   }
 
   getSortIcon(field: keyof T): string {
