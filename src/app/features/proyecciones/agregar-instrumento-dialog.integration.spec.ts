@@ -42,8 +42,8 @@ describe('AgregarInstrumentoDialogComponent — crear en blanco', () => {
     disposicion_sgnij: 'DIS-2025',
     rect_disposoco_sgnij: null,
     resolucion_previa_continuidad: null,
-    resolucion_ministerial_rect1: null,
-    resolucion_ministerial_rect2: null,
+    id_resolucion_rect1: null,
+    id_resolucion_rect2: null,
     destino_anterior: 'DEST-ANT-2025',
     destino_nuevo: 'DEST-NUEVO-2025',
   };
@@ -69,8 +69,8 @@ describe('AgregarInstrumentoDialogComponent — crear en blanco', () => {
     disposicion_sgnij: 'DIS-2026',
     rect_disposoco_sgnij: null,
     resolucion_previa_continuidad: null,
-    resolucion_ministerial_rect1: null,
-    resolucion_ministerial_rect2: null,
+    id_resolucion_rect1: null,
+    id_resolucion_rect2: null,
     destino_anterior: 'DEST-ANT-2026',
     destino_nuevo: 'DEST-NUEVO-2026',
     observaciones: 'snapshot 2026',
@@ -154,8 +154,8 @@ describe('AgregarInstrumentoDialogComponent — crear en blanco', () => {
     expect(component.form.disposicion_sgnij).toBeNull();
     expect(component.form.rect_disposoco_sgnij).toBeNull();
     expect(component.form.resolucion_previa_continuidad).toBeNull();
-    expect(component.form.resolucion_ministerial_rect1).toBeNull();
-    expect(component.form.resolucion_ministerial_rect2).toBeNull();
+    expect(component.form.id_resolucion_rect1).toBeNull();
+    expect(component.form.id_resolucion_rect2).toBeNull();
     expect(component.form.destino_anterior).toBeNull();
     expect(component.form.destino_nuevo).toBeNull();
     expect(component.form.observaciones).toBeNull();

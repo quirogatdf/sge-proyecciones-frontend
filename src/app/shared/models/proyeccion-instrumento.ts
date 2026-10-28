@@ -1,3 +1,12 @@
+export interface ResolucionResumen {
+  id: number;
+  nombre: string;
+  año?: number | null;
+  tipo?: string | null;
+  observacion?: string | null;
+  url?: string | null;
+}
+
 export interface ProyeccionInstrumento {
   id: number;
   proyeccion_id: number;
@@ -13,8 +22,8 @@ export interface ProyeccionInstrumento {
   resolucion_ministerial_ext?: string | null;
   disposicion_sgnij?: string | null;
   rect_disposoco_sgnij?: string | null;
-  resolucion_ministerial_rect1?: string | null;
-  resolucion_ministerial_rect2?: string | null;
+  id_resolucion_rect1?: number | null;
+  id_resolucion_rect2?: number | null;
   resolucion_previa_continuidad?: string | null;
   id_cargo?: number | null;
   id_funcion?: number | null;
@@ -26,13 +35,9 @@ export interface ProyeccionInstrumento {
   observaciones?: string | null;
 
   // Relationships (populated when eager loaded)
-  resolucion?: {
-    id: number;
-    nombre: string;
-    año?: number | null;
-    observacion?: string | null;
-    url?: string | null;
-  };
+  resolucion?: ResolucionResumen | null;
+  resolucion_rect1?: ResolucionResumen | null;
+  resolucion_rect2?: ResolucionResumen | null;
   cargo?: {
     id: number;
     nombre: string;
@@ -51,5 +56,12 @@ export interface ProyeccionInstrumento {
 
 export type PayloadProyeccionInstrumento = Omit<
   ProyeccionInstrumento,
-  'id' | 'proyeccion_id' | 'resolucion' | 'cargo' | 'funcion' | 'turno'
+  | 'id'
+  | 'proyeccion_id'
+  | 'resolucion'
+  | 'resolucion_rect1'
+  | 'resolucion_rect2'
+  | 'cargo'
+  | 'funcion'
+  | 'turno'
 >;

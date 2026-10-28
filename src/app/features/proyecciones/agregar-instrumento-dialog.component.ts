@@ -269,22 +269,22 @@ interface SelectOption {
 
           <div class="form-row">
             <div class="form-group">
-              <label for="resolucion_ministerial_rect1">Resolución Ministerial Rect. 1</label>
-              <input
-                id="resolucion_ministerial_rect1"
-                type="text"
-                [(ngModel)]="form.resolucion_ministerial_rect1"
-                placeholder="Opcional"
+              <label for="id_resolucion_rect1">Resolución Ministerial Rect. 1</label>
+              <app-searchable-select
+                id="id_resolucion_rect1"
+                [options]="resolucionesOptions()"
+                placeholder="Seleccionar resolución..."
+                [(value)]="form.id_resolucion_rect1"
               />
             </div>
 
             <div class="form-group">
-              <label for="resolucion_ministerial_rect2">Resolución Ministerial Rect. 2</label>
-              <input
-                id="resolucion_ministerial_rect2"
-                type="text"
-                [(ngModel)]="form.resolucion_ministerial_rect2"
-                placeholder="Opcional"
+              <label for="id_resolucion_rect2">Resolución Ministerial Rect. 2</label>
+              <app-searchable-select
+                id="id_resolucion_rect2"
+                [options]="resolucionesOptions()"
+                placeholder="Seleccionar resolución..."
+                [(value)]="form.id_resolucion_rect2"
               />
             </div>
           </div>
@@ -592,8 +592,8 @@ export class AgregarInstrumentoDialogComponent {
     disposicion_sgnij: null as string | null,
     rect_disposoco_sgnij: null as string | null,
     resolucion_previa_continuidad: null as string | null,
-    resolucion_ministerial_rect1: null as string | null,
-    resolucion_ministerial_rect2: null as string | null,
+    id_resolucion_rect1: null as number | null,
+    id_resolucion_rect2: null as number | null,
     observaciones: null as string | null,
   };
 
@@ -665,8 +665,8 @@ export class AgregarInstrumentoDialogComponent {
       const { anio, estado, motivo, n_expediente, orden, fecha_desde, fecha_hasta, horar,
         cargos, id_cargo, id_funcion, id_turno, destino_anterior, destino_nuevo,
         id_resolucion, resolucion_ministerial, resolucion_ministerial_ext, disposicion_sgnij,
-        rect_disposoco_sgnij, resolucion_previa_continuidad, resolucion_ministerial_rect1,
-        resolucion_ministerial_rect2, observaciones } = editing;
+        rect_disposoco_sgnij, resolucion_previa_continuidad, id_resolucion_rect1,
+        id_resolucion_rect2, observaciones } = editing;
       this.form = {
         anio,
         estado: estado ?? null,
@@ -687,8 +687,8 @@ export class AgregarInstrumentoDialogComponent {
         disposicion_sgnij: disposicion_sgnij ?? null,
         rect_disposoco_sgnij: rect_disposoco_sgnij ?? null,
         resolucion_previa_continuidad: resolucion_previa_continuidad ?? null,
-        resolucion_ministerial_rect1: resolucion_ministerial_rect1 ?? null,
-        resolucion_ministerial_rect2: resolucion_ministerial_rect2 ?? null,
+        id_resolucion_rect1: id_resolucion_rect1 ?? null,
+        id_resolucion_rect2: id_resolucion_rect2 ?? null,
         observaciones: observaciones ?? null,
       };
       // `resolucion_ministerial` no se edita — la relación apunta a id_resolucion.
@@ -734,8 +734,8 @@ export class AgregarInstrumentoDialogComponent {
       disposicion_sgnij: base.disposicion_sgnij ?? null,
       rect_disposoco_sgnij: base.rect_disposoco_sgnij ?? null,
       resolucion_previa_continuidad: base.resolucion_previa_continuidad ?? null,
-      resolucion_ministerial_rect1: base.resolucion_ministerial_rect1 ?? null,
-      resolucion_ministerial_rect2: base.resolucion_ministerial_rect2 ?? null,
+      id_resolucion_rect1: base.id_resolucion_rect1 ?? null,
+      id_resolucion_rect2: base.id_resolucion_rect2 ?? null,
       observaciones: base.observaciones ?? null,
     };
   }
@@ -816,8 +816,8 @@ export class AgregarInstrumentoDialogComponent {
       disposicion_sgnij: p.disposicion_sgnij ?? null,
       rect_disposoco_sgnij: p.rect_disposoco_sgnij ?? null,
       resolucion_previa_continuidad: p.resolucion_previa_continuidad ?? null,
-      resolucion_ministerial_rect1: p.resolucion_ministerial_rect1 ?? null,
-      resolucion_ministerial_rect2: p.resolucion_ministerial_rect2 ?? null,
+      id_resolucion_rect1: p.id_resolucion_rect1 ?? null,
+      id_resolucion_rect2: p.id_resolucion_rect2 ?? null,
       destino_anterior: p.destino_anterior ?? null,
       destino_nuevo: p.destino_nuevo ?? null,
     };
@@ -853,8 +853,8 @@ export class AgregarInstrumentoDialogComponent {
       disposicion_sgnij: snapshot.disposicion_sgnij ?? null,
       rect_disposoco_sgnij: snapshot.rect_disposoco_sgnij ?? null,
       resolucion_previa_continuidad: snapshot.resolucion_previa_continuidad ?? null,
-      resolucion_ministerial_rect1: snapshot.resolucion_ministerial_rect1 ?? null,
-      resolucion_ministerial_rect2: snapshot.resolucion_ministerial_rect2 ?? null,
+      id_resolucion_rect1: snapshot.id_resolucion_rect1 ?? null,
+      id_resolucion_rect2: snapshot.id_resolucion_rect2 ?? null,
       destino_anterior: snapshot.destino_anterior ?? null,
       destino_nuevo: snapshot.destino_nuevo ?? null,
     };
@@ -890,8 +890,8 @@ export class AgregarInstrumentoDialogComponent {
       disposicion_sgnij: this.form.disposicion_sgnij,
       rect_disposoco_sgnij: this.form.rect_disposoco_sgnij,
       resolucion_previa_continuidad: this.form.resolucion_previa_continuidad,
-      resolucion_ministerial_rect1: this.form.resolucion_ministerial_rect1,
-      resolucion_ministerial_rect2: this.form.resolucion_ministerial_rect2,
+      id_resolucion_rect1: this.form.id_resolucion_rect1,
+      id_resolucion_rect2: this.form.id_resolucion_rect2,
       observaciones: this.form.observaciones,
     };
   }

@@ -471,22 +471,22 @@ interface SelectOption {
 
           <div class="form-row">
             <div class="form-group">
-              <label for="resolucion_ministerial_rect1">Resolución Ministerial Rect. 1</label>
-              <input
-                id="resolucion_ministerial_rect1"
-                type="text"
-                [(ngModel)]="formData.resolucion_ministerial_rect1"
-                placeholder="Opcional"
+              <label for="id_resolucion_rect1">Resolución Ministerial Rect. 1</label>
+              <app-searchable-select
+                id="id_resolucion_rect1"
+                [options]="resolucionesOptions()"
+                placeholder="Seleccionar resolución..."
+                [(value)]="formData.id_resolucion_rect1"
               />
             </div>
 
             <div class="form-group">
-              <label for="resolucion_ministerial_rect2">Resolución Ministerial Rect. 2</label>
-              <input
-                id="resolucion_ministerial_rect2"
-                type="text"
-                [(ngModel)]="formData.resolucion_ministerial_rect2"
-                placeholder="Opcional"
+              <label for="id_resolucion_rect2">Resolución Ministerial Rect. 2</label>
+              <app-searchable-select
+                id="id_resolucion_rect2"
+                [options]="resolucionesOptions()"
+                placeholder="Seleccionar resolución..."
+                [(value)]="formData.id_resolucion_rect2"
               />
             </div>
           </div>
@@ -1142,8 +1142,8 @@ export class ProyeccionesListComponent implements OnInit {
     año: '',
     id_resolucion: null as number | null,
     resolucion_previa_continuidad: '',
-    resolucion_ministerial_rect1: '',
-    resolucion_ministerial_rect2: '',
+    id_resolucion_rect1: null as number | null,
+    id_resolucion_rect2: null as number | null,
     destino_anterior: '',
     destino_nuevo: '',
   };
@@ -1422,8 +1422,8 @@ export class ProyeccionesListComponent implements OnInit {
         id_puesto: item.id_puesto || '',
         año: item['año'] || '',
         resolucion_previa_continuidad: item.resolucion_previa_continuidad || '',
-        resolucion_ministerial_rect1: item.resolucion_ministerial_rect1 || '',
-        resolucion_ministerial_rect2: item.resolucion_ministerial_rect2 || '',
+        id_resolucion_rect1: item.id_resolucion_rect1 ?? null,
+        id_resolucion_rect2: item.id_resolucion_rect2 ?? null,
         destino_anterior: item.destino_anterior || '',
         destino_nuevo: item.destino_nuevo || '',
       };
@@ -1450,8 +1450,8 @@ export class ProyeccionesListComponent implements OnInit {
         rect_disposoco_sgnij: '',
         id_puesto: null,
         resolucion_previa_continuidad: '',
-        resolucion_ministerial_rect1: '',
-        resolucion_ministerial_rect2: '',
+        id_resolucion_rect1: null,
+        id_resolucion_rect2: null,
         destino_anterior: '',
         destino_nuevo: '',
       };
@@ -1514,8 +1514,8 @@ export class ProyeccionesListComponent implements OnInit {
       'estado', 'motivo', 'n_expediente', 'orden', 'fecha_desde', 'fecha_hasta',
       'horar', 'cargos', 'id_cargo', 'id_funcion', 'id_turno', 'id_resolucion',
       'resolucion_ministerial_ext', 'disposicion_sgnij', 'rect_disposoco_sgnij',
-      'resolucion_previa_continuidad', 'resolucion_ministerial_rect1',
-      'resolucion_ministerial_rect2', 'destino_anterior', 'destino_nuevo',
+      'resolucion_previa_continuidad', 'id_resolucion_rect1',
+      'id_resolucion_rect2', 'destino_anterior', 'destino_nuevo',
     ];
     const instrumento = clean({
       anio: this.formData['año'],

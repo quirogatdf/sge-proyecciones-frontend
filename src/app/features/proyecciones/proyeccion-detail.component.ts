@@ -180,12 +180,12 @@ import { AgregarInstrumentoDialogComponent } from './agregar-instrumento-dialog.
 
               <div class="detail-item">
                 <label>Resolución Ministerial Rect. 1:</label>
-                <span>{{ proyeccion()?.resolucion_ministerial_rect1 || '-' }}</span>
+                <span>{{ proyeccion()?.resolucion_rect1?.nombre || '-' }}</span>
               </div>
 
               <div class="detail-item">
                 <label>Resolución Ministerial Rect. 2:</label>
-                <span>{{ proyeccion()?.resolucion_ministerial_rect2 || '-' }}</span>
+                <span>{{ proyeccion()?.resolucion_rect2?.nombre || '-' }}</span>
               </div>
             </div>
           </div>

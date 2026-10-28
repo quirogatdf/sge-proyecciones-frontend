@@ -1,4 +1,8 @@
-import type { PayloadProyeccionInstrumento, ProyeccionInstrumento } from './proyeccion-instrumento';
+import type {
+  PayloadProyeccionInstrumento,
+  ProyeccionInstrumento,
+  ResolucionResumen,
+} from './proyeccion-instrumento';
 
 /**
  * Payload para crear la "plaza" (paso 1 del wizard).
@@ -48,8 +52,8 @@ export interface Proyeccion {
   disposicion_sgnij?: string | null;
   rect_disposoco_sgnij?: string | null;
   resolucion_previa_continuidad?: string | null;
-  resolucion_ministerial_rect1?: string | null;
-  resolucion_ministerial_rect2?: string | null;
+  id_resolucion_rect1?: number | null;
+  id_resolucion_rect2?: number | null;
   destino_anterior?: string | null;
   destino_nuevo?: string | null;
 
@@ -78,13 +82,9 @@ export interface Proyeccion {
     nombre: string;
     localidad: string; // Campo agregado para mostrar la ciudad
   };
-  resolucion?: {
-    id: number;
-    nombre: string;
-    año?: number | null;
-    observacion?: string | null;
-    url?: string | null;
-  } | null;
+  resolucion?: ResolucionResumen | null;
+  resolucion_rect1?: ResolucionResumen | null;
+  resolucion_rect2?: ResolucionResumen | null;
 
   // Historial completo (solo en el detalle)
   instrumentos?: ProyeccionInstrumento[];
