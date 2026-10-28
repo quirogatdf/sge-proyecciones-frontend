@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+export const TIPOS_RESOLUCION = [
+  'Creación',
+  'Continuidad',
+  'Rectificación',
+  'Sin definir',
+] as const;
+
+export type TipoResolucion = (typeof TIPOS_RESOLUCION)[number];
+
 export const ResolucionFormSchema = z.object({
   nombre: z.string()
     .min(1, { error: 'El nombre es obligatorio' })
@@ -9,6 +18,10 @@ export const ResolucionFormSchema = z.object({
     .int({ error: 'El año debe ser un número entero' })
     .min(1900, { error: 'El año debe ser mayor o igual a 1900' })
     .max(new Date().getFullYear() + 10, { error: 'El año no puede superar ' + (new Date().getFullYear() + 10) }),
+
+  tipo: z.enum(TIPOS_RESOLUCION, {
+    error: 'El tipo debe ser: Creación, Continuidad, Rectificación o Sin definir',
+  }).default('Sin definir'),
 
   observacion: z.string()
     .optional()

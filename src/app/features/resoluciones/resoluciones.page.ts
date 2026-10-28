@@ -6,7 +6,7 @@ import { ResolucionesService, Resolucion } from '../../core/services/resolucione
 import { AlertService } from '../../core/services/alert.service';
 import { CrudTableComponent } from '../../shared/components/crud-table/crud-table.component';
 import { ColumnConfig, CrudTableConfig } from '../../shared/interfaces/crud-config.interface';
-import { ResolucionFormSchema, type ResolucionFormInput } from '../../schemas/resolucion.schema';
+import { ResolucionFormSchema, TIPOS_RESOLUCION, type ResolucionFormInput } from '../../schemas/resolucion.schema';
 
 @Component({
   selector: 'app-resoluciones-page',
@@ -57,6 +57,26 @@ import { ResolucionFormSchema, type ResolucionFormInput } from '../../schemas/re
           @if (getFieldErrors('año').length > 0) {
             <div class="error-messages">
               @for (error of getFieldErrors('año'); track error) {
+                <small class="error-text">{{ error }}</small>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group" [class.has-error]="hasFieldError('tipo')">
+          <label for="tipo">Tipo</label>
+          <select
+            id="tipo"
+            [(ngModel)]="formData.tipo"
+            (change)="clearFieldError('tipo')"
+          >
+            @for (tipo of tiposResolucion; track tipo) {
+              <option [value]="tipo">{{ tipo }}</option>
+            }
+          </select>
+          @if (getFieldErrors('tipo').length > 0) {
+            <div class="error-messages">
+              @for (error of getFieldErrors('tipo'); track error) {
                 <small class="error-text">{{ error }}</small>
               }
             </div>
@@ -120,7 +140,8 @@ import { ResolucionFormSchema, type ResolucionFormInput } from '../../schemas/re
     }
 
     .form-group input,
-    .form-group textarea {
+    .form-group textarea,
+    .form-group select {
       padding: 0.5rem 0.75rem;
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -131,18 +152,21 @@ import { ResolucionFormSchema, type ResolucionFormInput } from '../../schemas/re
     }
 
     .form-group input:focus,
-    .form-group textarea:focus {
+    .form-group textarea:focus,
+    .form-group select:focus {
       outline: none;
       border-color: var(--primary);
     }
 
     .form-group.has-error input,
-    .form-group.has-error textarea {
+    .form-group.has-error textarea,
+    .form-group.has-error select {
       border-color: var(--destructive);
     }
 
     .form-group.has-error input:focus,
-    .form-group.has-error textarea:focus {
+    .form-group.has-error textarea:focus,
+    .form-group.has-error select:focus {
       border-color: var(--destructive);
       box-shadow: 0 0 0 2px color-mix(in oklch, var(--destructive) 20%, transparent);
     }
@@ -168,13 +192,15 @@ export class ResolucionesPage {
 
   saving = signal(false);
   editingResolucion = signal<Resolucion | null>(null);
-  
+  readonly tiposResolucion = TIPOS_RESOLUCION;
+
   submitted = signal(false);
   formErrors = signal<Record<string, string[]>>({});
   
   formData: ResolucionFormInput = {
     nombre: '',
     año: new Date().getFullYear(),
+    tipo: 'Sin definir',
     observacion: null,
     url: null
   };
@@ -182,12 +208,13 @@ export class ResolucionesPage {
   tableConfig: CrudTableConfig<Resolucion> = {
     title: 'Administrar Resoluciones',
     pageSize: 25,
-    searchPlaceholder: 'Buscar por nombre o año...',
+    searchPlaceholder: 'Buscar por nombre, año o tipo...',
     showViewDetail: true,
     columns: [
       { key: 'id', label: 'ID', sortable: true },
       { key: 'nombre', label: 'Nombre', sortable: true },
       { key: 'año', label: 'Año', sortable: true },
+      { key: 'tipo', label: 'Tipo', sortable: true },
       {
         key: 'observacion',
         label: 'Observación',
@@ -207,7 +234,7 @@ export class ResolucionesPage {
           : '-'
       }
     ],
-    searchFields: ['nombre', 'año']
+    searchFields: ['nombre', 'año', 'tipo']
   };
 
   onModalOpened(item: Resolucion | null) {
@@ -219,6 +246,7 @@ export class ResolucionesPage {
       this.formData = { 
         nombre: item.nombre, 
         año: item.año,
+        tipo: item.tipo ?? 'Sin definir',
         observacion: item.observacion || '',
         url: item.url || ''
       };
@@ -227,6 +255,7 @@ export class ResolucionesPage {
       this.formData = { 
         nombre: '', 
         año: new Date().getFullYear(),
+        tipo: 'Sin definir',
         observacion: '',
         url: ''
       };

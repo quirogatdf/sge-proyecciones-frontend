@@ -1,10 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Resolucion } from '../../schemas/resolucion.schema';
+import { Resolucion, TipoResolucion } from '../../schemas/resolucion.schema';
 import { environment } from '../../../environments/environment';
 
-export type { Resolucion };
+export type { Resolucion, TipoResolucion };
 
 export interface ResolucionResponse {
   data: Resolucion | Resolucion[];
@@ -33,6 +33,7 @@ export class ResolucionesService {
   create(data: {
     nombre: string;
     año: number;
+    tipo?: TipoResolucion;
     observacion?: string | null;
     url?: string | null;
   }): Observable<ResolucionResponse> {
@@ -42,6 +43,7 @@ export class ResolucionesService {
   update(id: number, data: {
     nombre: string;
     año: number;
+    tipo?: TipoResolucion;
     observacion?: string | null;
     url?: string | null;
   }): Observable<ResolucionResponse> {

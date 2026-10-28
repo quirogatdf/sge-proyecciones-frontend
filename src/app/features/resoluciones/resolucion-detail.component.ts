@@ -62,6 +62,10 @@ import { ActivatedRoute, Router } from '@angular/router';
                 <label>Año:</label>
                 <span>{{ resolucion()?.['año'] }}</span>
               </div>
+              <div class="detail-item">
+                <label>Tipo:</label>
+                <span>{{ resolucion()?.tipo || 'Sin definir' }}</span>
+              </div>
             </div>
           </div>
 
