@@ -18,23 +18,6 @@ import { ResolucionFormSchema, TIPOS_RESOLUCION, type ResolucionFormInput, type 
   ],
   template: `
     <div class="page">
-      <div class="filters">
-        <div class="filter-group">
-          <label for="tipoFiltro">Filtrar por tipo:</label>
-          <select
-            id="tipoFiltro"
-            class="filter-select"
-            [ngModel]="tipoFilter()"
-            (ngModelChange)="onTipoFilterChange($event)"
-          >
-            <option value="">Todos los tipos</option>
-            @for (tipo of tiposResolucion; track tipo) {
-              <option [value]="tipo">{{ tipo }}</option>
-            }
-          </select>
-        </div>
-      </div>
-
       <app-crud-table
         #crudTable
         [config]="tableConfig"
@@ -45,6 +28,22 @@ import { ResolucionFormSchema, TIPOS_RESOLUCION, type ResolucionFormInput, type 
         (save)="onSave(crudTable)"
         (viewDetail)="onViewDetail($event)"
       >
+        <div crud-filters class="filters">
+          <div class="filter-group">
+            <label for="tipoFiltro">Filtrar por tipo:</label>
+            <select
+              id="tipoFiltro"
+              class="filter-select"
+              [ngModel]="tipoFilter()"
+              (ngModelChange)="onTipoFilterChange($event)"
+            >
+              <option value="">Todos los tipos</option>
+              @for (tipo of tiposResolucion; track tipo) {
+                <option [value]="tipo">{{ tipo }}</option>
+              }
+            </select>
+          </div>
+        </div>
       <div form-content>
         <div class="form-group" [class.has-error]="hasFieldError('nombre')">
           <label for="nombre">Nombre *</label>

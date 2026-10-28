@@ -100,62 +100,6 @@ interface SelectOption {
   imports: [CommonModule, FormsModule, CrudTableComponent, SearchableSelectComponent, ExportDialogComponent, AgregarInstrumentoDialogComponent],
   template: `
     <div class="page">
-      <header class="page-header">
-        <h1>Proyecciones</h1>
-        <button class="btn-export" (click)="openExportDialog()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Exportar Excel
-        </button>
-      </header>
-
-      <!-- Filtros -->
-      <div class="filters">
-        <div class="filter-group">
-          <label for="nivelFiltro">Filtrar por nivel:</label>
-          <app-searchable-select
-            id="nivelFiltro"
-            [options]="nivelesOptions()"
-            placeholder="Todos los niveles"
-            [(value)]="selectedNivelId"
-            (valueChanged)="applyFilters()"
-          />
-        </div>
-        <div class="filter-group">
-          <label for="resolucionFiltro">Filtrar por resolución:</label>
-          <app-searchable-select
-            id="resolucionFiltro"
-            [options]="resolucionesFilterOptions()"
-            placeholder="Todas las resoluciones"
-            [(value)]="selectedResolucionId"
-            (valueChanged)="applyFilters()"
-          />
-        </div>
-        <div class="filter-group">
-          <label for="localidadFiltro">Filtrar por localidad:</label>
-          <app-searchable-select
-            id="localidadFiltro"
-            [options]="localidadFilterOptions()"
-            placeholder="Todas las localidades"
-            [(value)]="selectedLocalidad"
-            (valueChanged)="applyFilters()"
-          />
-        </div>
-        <div class="filter-group">
-          <label for="anioFiltro">Año:</label>
-          <app-searchable-select
-            id="anioFiltro"
-            [options]="aniosFilterOptions()"
-            placeholder="Año actual"
-            [(value)]="selectedAnio"
-            (valueChanged)="applyFilters()"
-          />
-        </div>
-      </div>
-
       <app-crud-table
         #crudTable
         [config]="tableConfig"
@@ -167,6 +111,58 @@ interface SelectOption {
         (save)="onSave(crudTable)"
         (viewDetail)="onViewDetail($event)"
       >
+        <button crud-actions class="btn-export" (click)="openExportDialog()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exportar Excel
+        </button>
+
+        <!-- Filtros -->
+        <div crud-filters class="filters">
+          <div class="filter-group">
+            <label for="nivelFiltro">Filtrar por nivel:</label>
+            <app-searchable-select
+              id="nivelFiltro"
+              [options]="nivelesOptions()"
+              placeholder="Todos los niveles"
+              [(value)]="selectedNivelId"
+              (valueChanged)="applyFilters()"
+            />
+          </div>
+          <div class="filter-group">
+            <label for="resolucionFiltro">Filtrar por resolución:</label>
+            <app-searchable-select
+              id="resolucionFiltro"
+              [options]="resolucionesFilterOptions()"
+              placeholder="Todas las resoluciones"
+              [(value)]="selectedResolucionId"
+              (valueChanged)="applyFilters()"
+            />
+          </div>
+          <div class="filter-group">
+            <label for="localidadFiltro">Filtrar por localidad:</label>
+            <app-searchable-select
+              id="localidadFiltro"
+              [options]="localidadFilterOptions()"
+              placeholder="Todas las localidades"
+              [(value)]="selectedLocalidad"
+              (valueChanged)="applyFilters()"
+            />
+          </div>
+          <div class="filter-group">
+            <label for="anioFiltro">Año:</label>
+            <app-searchable-select
+              id="anioFiltro"
+              [options]="aniosFilterOptions()"
+              placeholder="Año actual"
+              [(value)]="selectedAnio"
+              (valueChanged)="applyFilters()"
+            />
+          </div>
+        </div>
         <div form-content>
           <!-- Stepper (solo al CREAR: el alta es en dos pasos) -->
           @if (!editingId()) {
@@ -627,19 +623,6 @@ interface SelectOption {
         gap: 1.5rem;
         width: 100%;
         max-width: 100%;
-      }
-
-      .page-header h1 {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--foreground);
-        margin: 0;
-      }
-
-      .page-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
       }
 
       .btn-export {

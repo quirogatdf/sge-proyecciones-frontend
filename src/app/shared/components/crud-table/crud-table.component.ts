@@ -47,13 +47,19 @@ import {
   template: `
     <div class="page">
       <header class="page-header">
-        <h1>{{ config.title }}</h1>
-        @if (authService.isAdmin()) {
-          <button class="btn btn-primary" (click)="openModal()">
-            <svg lucidePlus [size]="18"></svg>
-            {{ config.createButtonLabel || 'Nuevo' }}
-          </button>
-        }
+        <div class="page-header-main">
+          <h1>{{ config.title }}</h1>
+          <div class="page-header-actions">
+            <ng-content select="[crud-actions]"></ng-content>
+            @if (authService.isAdmin()) {
+              <button class="btn btn-primary" (click)="openModal()">
+                <svg lucidePlus [size]="18"></svg>
+                {{ config.createButtonLabel || 'Nuevo' }}
+              </button>
+            }
+          </div>
+        </div>
+        <ng-content select="[crud-filters]"></ng-content>
       </header>
 
       <div class="table-container">
@@ -222,8 +228,23 @@ import {
 
       .page-header {
         display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .page-header-main {
+        display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .page-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
       }
 
       .page-header h1 {
