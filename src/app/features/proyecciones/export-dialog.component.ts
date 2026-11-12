@@ -7,7 +7,7 @@ import { AlertService } from '../../core/services/alert.service';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select';
 
 export interface ExportFilters {
-  motivo: 'Continuidad' | 'Creacion' | null;
+  motivo: 'Continuidad' | 'Creacion' | 'Planta funcional' | null;
   id_institucion: number | null;
   id_cargo: number | null;
   id_resolucion: number | null;
@@ -290,6 +290,7 @@ export class ExportDialogComponent implements OnInit {
     { id: null as unknown as string, label: 'Todos los motivos' },
     { id: 'Creacion', label: 'Creación' },
     { id: 'Continuidad', label: 'Continuidad' },
+    { id: 'Planta funcional', label: 'Planta funcional' },
   ]);
 
   readonly institucionesOptions = computed(() => [
@@ -371,7 +372,7 @@ export class ExportDialogComponent implements OnInit {
     this.exporting.set(true);
 
     const params: {
-      motivo?: 'Continuidad' | 'Creacion';
+      motivo?: 'Continuidad' | 'Creacion' | 'Planta funcional';
       id_institucion?: number;
       id_cargo?: number;
       id_resolucion?: number;
@@ -379,7 +380,7 @@ export class ExportDialogComponent implements OnInit {
     } = {};
 
     if (this.selectedMotivo !== null) {
-      params.motivo = this.selectedMotivo as 'Continuidad' | 'Creacion';
+      params.motivo = this.selectedMotivo as 'Continuidad' | 'Creacion' | 'Planta funcional';
     }
     if (this.selectedInstitucionId !== null) {
       params.id_institucion = this.selectedInstitucionId;

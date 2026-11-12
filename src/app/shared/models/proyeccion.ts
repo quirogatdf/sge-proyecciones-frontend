@@ -37,7 +37,7 @@ export interface Proyeccion {
   // Si la plaza no tiene instrumento para el año, son null.
   estado?: string | null; // 'Autorizado' | 'Rechazado' | 'Pendiente'
   n_expediente?: string | null;
-  motivo?: string | null; // 'Creación' | 'Continuidad' | 'Baja' | 'Sin definir'
+  motivo?: string | null; // 'Creación' | 'Continuidad' | 'Planta funcional' | 'Baja' | 'Sin definir'
   orden?: string | null;
   horar?: number | null;
   cargos?: number | null;

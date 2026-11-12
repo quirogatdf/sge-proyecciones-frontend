@@ -203,7 +203,7 @@ export class ProyeccionesService {
    * Returns a Blob that should be saved as a download.
    */
   exportExcel(params: {
-    motivo?: 'Continuidad' | 'Creacion';
+    motivo?: 'Continuidad' | 'Creacion' | 'Planta funcional';
     id_nivel?: number;
     id_institucion?: number;
     id_cargo?: number;

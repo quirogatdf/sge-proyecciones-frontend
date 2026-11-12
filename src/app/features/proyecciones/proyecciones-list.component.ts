@@ -1061,6 +1061,7 @@ export class ProyeccionesListComponent implements OnInit {
   readonly motivosOptions = signal<SelectOption[]>([
     { id: 'Creación', label: 'Creación' },
     { id: 'Continuidad', label: 'Continuidad' },
+    { id: 'Planta funcional', label: 'Planta funcional' },
     { id: 'Baja', label: 'Baja' },
     { id: 'Sin definir', label: 'Sin definir' },
   ]);

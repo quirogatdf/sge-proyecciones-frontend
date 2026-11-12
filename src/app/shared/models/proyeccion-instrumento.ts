@@ -12,7 +12,7 @@ export interface ProyeccionInstrumento {
   proyeccion_id: number;
   anio: string;
   estado?: string | null; // 'Autorizado' | 'Rechazado' | 'Pendiente'
-  motivo?: string | null; // 'Creación' | 'Continuidad' | 'Baja' | 'Sin definir'
+  motivo?: string | null; // 'Creación' | 'Continuidad' | 'Planta funcional' | 'Baja' | 'Sin definir'
   n_expediente?: string | null;
   fecha_desde?: string | null; // date format
   fecha_hasta?: string | null; // date format
